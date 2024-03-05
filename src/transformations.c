@@ -1,0 +1,1 @@
+/* Basic editing features - rotate, scale and translate */

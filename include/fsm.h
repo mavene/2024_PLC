@@ -20,6 +20,7 @@ typedef enum {
 typedef enum {
    UPLOAD_FAIL,
    PARSE_FAIL,
+   PREVIEW_FAIL,
    DOWNLOAD_FAIL
 } Error;
 
@@ -39,6 +40,14 @@ void initFSM(FSM*);
 void transition(FSM*, char*);
 void START_FSM(void);
 void IDLE_FSM(FSM*, char*);
+int UPLOAD_FSM(void);
+int PREVIEW_FSM(FSM*, char*);
+void EDIT_FSM(FSM*, char*);
+void EDIT_translation_FSM(void);
+void EDIT_scaling_FSM(void);
+void EDIT_rotation_FSM(void);
+void EDIT_edgeDetect_FSM(void);
+int DOWNLOAD_FSM(void);
 void END_FSM(void);
 
 #endif

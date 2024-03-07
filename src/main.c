@@ -7,7 +7,7 @@
 
 /* Perform clean up here */
 void functionA() {
-    printf("Caught the exit!\n");
+    printf("Caught the exit! Goodbye~\n");
 }
 
 int main() {
@@ -17,6 +17,7 @@ int main() {
     initFSM(f); 
     memset(input, ' ', sizeof(char));
 
+    printf("Welcome.\n");
     while(f->currentState != END) {
         transition(f, input);
     }

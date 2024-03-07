@@ -10,7 +10,19 @@ void get_command(State state, char* input) {
     getchar(); /* Consumes the pesky \n. Need to find a better way */
     if (*input != EOF) {
         if (state == IDLE && (*input != '1' && *input != '2')) {
-            printf("Please enter only 1 (Continue) or 2 (Exit)\n");
+            printf("Please enter only these options below\n1. Upload file\n2. Exit program\n");
+            get_command(state, input); /* Loop back */
+        } 
+        else if (state == PREVIEW_MODE && (*input != 'Y' && *input != 'N')) {
+            printf("Please enter only Y (Yes) or N (No)\n");
+            get_command(state, input); /* Loop back */
+        }
+        else if (state == EDIT_MODE && (*input != '1' && 
+                                        *input != '2' && 
+                                        *input != '3' &&
+                                        *input != '4' &&
+                                        *input != '5')) {
+            printf("Please enter only these options below\n1. Translation (Crop)\n2. Scale (Zoom)\n3. Rotation\n4. Edge Detection\n5.Preview Mode\n");
             get_command(state, input); /* Loop back */
         }
     }

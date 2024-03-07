@@ -1,14 +1,21 @@
 /* Parser of all user inputs */
+#include <stdio.h>
 #include "fsm.h"
-
 /* MICHELLE */
 
-/* Just a character command - "Y"/"N" */
-void retrieve_command(State state, char* input) {
+/* Retrieve command */
+void get_command(State state, char* input) {
     
-    // input = sscanf();
-    // Check state and if its valid - Y, N, T, blablbal
+    *input = getchar();
+    getchar(); /* Consumes the pesky \n. Need to find a better way */
+    if (*input != EOF) {
+        if (state == IDLE && (*input != '1' && *input != '2')) {
+            printf("Please enter only 1 (Continue) or 2 (Exit)\n");
+            get_command(state, input); /* Loop back */
+        }
+    }
 }
+
 /* Handle any numerical input for edit commands here - angles/degrees whatever */
 
 /* Our bitmap parser here huehue*/

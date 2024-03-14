@@ -4,9 +4,9 @@
 #include "fsm.h"
 
 typedef struct {
-    int red;
-    int green;
-    int blue;
+    int r;
+    int g;
+    int b;
 } Pixel;
 
 typedef struct {

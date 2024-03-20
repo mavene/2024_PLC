@@ -54,6 +54,10 @@
 				"-lintl",
 				"-o",
 				"${fileDirname}\\${fileBasenameNoExtension}.exe"
+/*				"-ansi",       */
+/*				"-pedantic",   */
+/*				"-Wall",       */
+/*				"-Werror"      */
 			],
 			"options": {
 				"cwd": "${fileDirname}"

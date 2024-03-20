@@ -8,7 +8,8 @@
 /* SHIVANI */
 /* Put in scanf for file paths and sanitize them here*/
 char * retrieve_file() {
-    // Call GTK here to retrieve file 
+    /*Call GTK here to retrieve file */
+    return 0;
 }
 
 static void

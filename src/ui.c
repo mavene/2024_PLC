@@ -18,7 +18,7 @@ print_hello (GtkWidget *widget, gpointer data)
   g_print ("Previous\n");
 }
 
-static void activate (GtkApplication *app, gpointer user_data)
+static void activate (GtkApplication *app, gpointer userdata)
 {
   GtkWidget *window;
   GtkWidget *button;
@@ -49,16 +49,18 @@ static void activate (GtkApplication *app, gpointer user_data)
   gtk_widget_show_all (window);
 }
 
+void open_gtk_window(const char *image_path) {
+    GtkApplication *app;
+    int status;
 
-int main (int argc, char **argv)
-{
-  GtkApplication *app;
-  int status;
+    app = gtk_application_new("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(app, "activate", G_CALLBACK(activate), (gpointer)image_path);
+    status = g_application_run(G_APPLICATION(app), 0, NULL);
+    g_object_unref(app);
+}
 
-  app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
-  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
-  status = g_application_run (G_APPLICATION (app), argc, argv);
-  g_object_unref (app);
 
-  return status;
+int main(int argc, char **argv) {
+    open_gtk_window("image.png");
+    return 0;
 }

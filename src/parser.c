@@ -179,9 +179,9 @@ void ppmToMatrix(const char *filename) {
         }
 
         /* stores RGB values in the 2D array */
-        image->pixels[numLines / width][numLines % width].red = r;
-        image->pixels[numLines / width][numLines % width].green = g;
-        image->pixels[numLines / width][numLines % width].blue = b;
+        image->pixels[numLines / width][numLines % width].r = r;
+        image->pixels[numLines / width][numLines % width].g = g;
+        image->pixels[numLines / width][numLines % width].b = b;
         numLines++;
         /* printf("\current number of lines: %d\n", numLines); */
 
@@ -192,7 +192,7 @@ void ppmToMatrix(const char *filename) {
     /* print the contents of the 2D array */
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
-            printf("(%d, %d, %d) ", image->pixels[i][j].red, image->pixels[i][j].green, image->pixels[i][j].blue);
+            printf("(%d, %d, %d) ", image->pixels[i][j].r, image->pixels[i][j].g, image->pixels[i][j].b);
         }
         printf("\n");
     }
@@ -215,7 +215,7 @@ void printImage(Image *image) {
         printf("Row%d* = [", i + 1);
 
         for (j = 0; j < image->width; j++) {
-            printf("(%d, %d, %d)", image->pixels[i][j].red, image->pixels[i][j].green, image->pixels[i][j].blue);
+            printf("(%d, %d, %d)", image->pixels[i][j].r, image->pixels[i][j].g, image->pixels[i][j].b);
 
             /*Add a comma and space for all elements except the last one*/
             if (j < image->width - 1) {

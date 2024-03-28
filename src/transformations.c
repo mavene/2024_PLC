@@ -8,7 +8,7 @@
 Pixel bilinear_interpolate(double x, double y, long cols, long rows, Pixel **the_image) {
     double fraction_x, fraction_y, one_minus_x, one_minus_y;
     int ceil_x, ceil_y, floor_x, floor_y;
-    Pixel result;
+    Pixel result = {0};
 
     // Check if the coordinates are within the image bounds
     if (x < 0.0 || x >= (double)(cols - 1) || y < 0.0 || y >= (double)(rows - 1))

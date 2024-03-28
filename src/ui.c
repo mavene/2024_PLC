@@ -60,7 +60,7 @@ void open_gtk_window(const char *image_path) {
 }
 
 
-int main(int argc, char **argv) {
-    open_gtk_window("image.png");
-    return 0;
-}
+// int main(int argc, char **argv) {
+//     open_gtk_window("image.png");
+//     return 0;
+// }

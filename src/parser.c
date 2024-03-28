@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "parser.h"
 #include "fsm.h"
 /* MICHELLE */
@@ -143,47 +144,66 @@ void ppmToMatrix(const char *filename) {
     Image *image = createImage(width, height);
 
     while (fgets(line, sizeof(line), file) != NULL) {
-        /* printf("read lines: %s", line); */
+        /* printf("read lines: %s\n", line); */
 
-        /* check if line contains valid RGB triplets not exceeding 70 characters */ 
-        if (strlen(line) > 70) {
-            fprintf(stderr, "Error: Line %d contains more than 70 characters\n", numLines);
-            exit(1);
+        char *token = strtok(line, " \t\n");
+        while (token != NULL) {
+            /* parse RGB pixel */ 
+            int r, g, b;
+            if (sscanf(token, "%d", &r) != 1) {
+                fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
+                exit(1);
+            }
+            token = strtok(NULL, " \t\n");
+            if (token == NULL) {
+                fprintf(stderr, "Error: Incomplete RGB format in line %d\n", numLines);
+                exit(1);
+            }
+            if (sscanf(token, "%d", &g) != 1) {
+                fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
+                exit(1);
+            }
+            token = strtok(NULL, " \t\n");
+            if (token == NULL) {
+                fprintf(stderr, "Error: Incomplete RGB format in line %d\n", numLines);
+                exit(1);
+            }
+            if (sscanf(token, "%d", &b) != 1) {
+                fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
+                exit(1);
+            }
+
+            /* printf("read pixel: %d %d %d\n", r, g, b); */
+
+            /* check if RGB values are non-negative */ 
+            if (r < 0 || g < 0 || b < 0) {
+                fprintf(stderr, "Error: Negative RGB values in line %d\n", numLines);
+                exit(1);
+            }
+
+            /* check if RGB values within bit depth range (0-255) */ 
+            if (r > 255 || g > 255 || b > 255) {
+                fprintf(stderr, "Error: RGB values exceed bit depth range in line %d\n", numLines);
+                exit(1);
+            }
+
+            /* convert RGB values to 0 or 255 if using maximal color value (0-1) */ 
+            if (maxColor == 1) {
+                r = (r == 1) ? 255 : 0;
+                g = (g == 1) ? 255 : 0;
+                b = (b == 1) ? 255 : 0;
+            }
+
+            /* stores RGB values in the 2D array */
+            image->pixels[numLines / width][numLines % width].r = r;
+            image->pixels[numLines / width][numLines % width].g = g;
+            image->pixels[numLines / width][numLines % width].b = b;
+            numLines++;
+
+            /* printf("current number of lines: %d\n", numLines); */
+
+            token = strtok(NULL, " \t\n"); /* move to the next token */ 
         }
-
-        /* parse RGB pixel */
-        int r, g, b;
-        if (sscanf(line, "%d %d %d", &r, &g, &b) != 3) {
-            fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
-            exit(1);
-        }
-
-        /* check if RGB values are non-negative */
-        if (r < 0 || g < 0 || b < 0) {
-            fprintf(stderr, "Error: Negative RGB values in line %d\n", numLines);
-            exit(1);
-        }
-
-        /* check if RGB values within bit depth range (0-255) */
-        if (r > 255 || g > 255 || b > 255) {
-            fprintf(stderr, "Error: RGB values exceed bit depth range in line %d\n", numLines);
-            exit(1);
-        }
-
-        /* convert RGB values to 0 or 255 if using maximal color value (0-1) */
-        if (maxColor == 1) {
-            r = (r == 1) ? 255 : 0;
-            g = (g == 1) ? 255 : 0;
-            b = (b == 1) ? 255 : 0;
-        }
-
-        /* stores RGB values in the 2D array */
-        image->pixels[numLines / width][numLines % width].r = r;
-        image->pixels[numLines / width][numLines % width].g = g;
-        image->pixels[numLines / width][numLines % width].b = b;
-        numLines++;
-        /* printf("\current number of lines: %d\n", numLines); */
-
     }
     
     printf("Actual NumLines: %d\n", numLines);
@@ -201,32 +221,14 @@ void ppmToMatrix(const char *filename) {
         exit(1);
     }
 
-
     freeImage(image);
 
     fclose(file);
 }
 
-/* HAVEN'T USED YET */
-void printImage(Image *image) {
-    for (int i = 0; i < image->height; i++) {
-        printf("Row%d* = [", i + 1);
 
-        for (int j = 0; j < image->width; j++) {
-            printf("(%d, %d, %d)", image->pixels[i][j].r, image->pixels[i][j].g, image->pixels[i][j].b);
-
-            // Add a comma and space for all elements except the last one
-            if (j < image->width - 1) {
-                printf(", ");
-            }
-        }
-
-        printf("]\n");
-    }
-}
-
-int main() {
-    const char *filename = "example.ppm";
+int main(int argc, char ** argv) {
+    const char *filename = argv[1];
 
     ppmToMatrix(filename);
 

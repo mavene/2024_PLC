@@ -38,6 +38,8 @@ void get_command(State state, char* input) {
 
 Image *createImage(int width, int height) {
     Image *image = (Image *)malloc(sizeof(Image));
+    int i;
+
     if (image == NULL) {
         fprintf(stderr, "Error: Memory allocation for image failed");
         exit(1);
@@ -53,7 +55,7 @@ Image *createImage(int width, int height) {
         exit(1);
     }
 
-    for (int i=0; i<height; i++) {
+    for (i=0; i<height; i++) {
         image->pixels[i] = (Pixel *)malloc(width * sizeof(Pixel));
         if (image->pixels[i] == NULL) {
             fprintf(stderr, "Error: Memory allocation for pixel row %d failed\n", i);
@@ -65,7 +67,8 @@ Image *createImage(int width, int height) {
 }
 
 void freeImage(Image *image) {
-    for (int i = 0; i < image->height; i++) {
+    int i;
+    for (i = 0; i < image->height; i++) {
         free(image->pixels[i]);
     }
     free(image->pixels);
@@ -73,8 +76,16 @@ void freeImage(Image *image) {
 }
 
 void ppmToMatrix(const char *filename) {
-    /* open PPM file */
     FILE *file = fopen(filename, "r");
+    int width, height, maxColor, numLines, expectedNumLines, r, g, b, i, j;
+    /* initialize Image structure to store the pixels */
+    Image *image = createImage(width, height);
+    char magicHeader[3];
+    char nextLine[256];
+    char line[256];
+    char nextLine2[256];
+
+    /* open PPM file */
     if (file == NULL) {
         fprintf(stderr, "Error opening file %s\n", filename);
         exit(1);
@@ -82,7 +93,6 @@ void ppmToMatrix(const char *filename) {
     printf("filename: %s\n", filename);
 
     /* read PPM magic header */
-    char magicHeader[3];
     fscanf(file, "%2s", magicHeader); /* read from file */
     magicHeader[2] = '\0';
     printf("magic header: %s\n", magicHeader);
@@ -95,12 +105,10 @@ void ppmToMatrix(const char *filename) {
     }
 
     /* somehow needs this to go to read the comments i'm not sure why */
-    char nextLine[256];
     fgets(nextLine, sizeof(nextLine), file);
     printf("next line after magicHeader: %s", nextLine);
 
     /* Skip comments and read the next line after # */
-    char line[256];
     while (fgets(line, sizeof(line), file) != NULL) {
         if (strncmp(line, "#", 1) == 0) {
             /* Comment line, skip it */ 
@@ -112,7 +120,6 @@ void ppmToMatrix(const char *filename) {
     }
 
     /* read width, height, and maximum color value */
-    int width, height;
     sscanf(line, "%d %d", &width, &height); /* read by line when skipping comments */
     if (width < 0 || height < 0) {
         fprintf(stderr, "Invalid width or height\n");
@@ -122,7 +129,6 @@ void ppmToMatrix(const char *filename) {
     printf("width: %d, height: %d\n", width, height);
 
     /* read maximum color value */
-    int maxColor;
     if (fscanf(file, "%d", &maxColor) != 1 || maxColor < 0 || maxColor > 255) {
         fprintf(stderr, "Invalid maximum color value\n");
         exit(1);
@@ -130,17 +136,13 @@ void ppmToMatrix(const char *filename) {
     printf("max color value: %d\n", maxColor);
 
     /* SOMEHOW HAVE AN EMPTHY LINE AFTER MAX COLOR VALUE */
-    char nextLine2[256];
     fgets(nextLine2, sizeof(nextLine2), file);
     printf("next line after max color value: %s", nextLine2);
 
     /* check if number of lines tally with width and height values */
-    int numLines = 0;
-    int expectedNumLines = width * height;
+    numLines = 0;
+    expectedNumLines = width * height;
     printf("Expected NumLines: %d\n", expectedNumLines);
-
-    /* initialize Image structure to store the pixels */
-    Image *image = createImage(width, height);
 
     while (fgets(line, sizeof(line), file) != NULL) {
         /* printf("read lines: %s", line); */
@@ -152,7 +154,6 @@ void ppmToMatrix(const char *filename) {
         }
 
         /* parse RGB pixel */
-        int r, g, b;
         if (sscanf(line, "%d %d %d", &r, &g, &b) != 3) {
             fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
             exit(1);
@@ -189,8 +190,8 @@ void ppmToMatrix(const char *filename) {
     printf("Actual NumLines: %d\n", numLines);
 
     /* print the contents of the 2D array */
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
             printf("(%d, %d, %d) ", image->pixels[i][j].red, image->pixels[i][j].green, image->pixels[i][j].blue);
         }
         printf("\n");
@@ -209,13 +210,14 @@ void ppmToMatrix(const char *filename) {
 
 /* HAVEN'T USED YET */
 void printImage(Image *image) {
-    for (int i = 0; i < image->height; i++) {
+    int i, j;
+    for (i = 0; i < image->height; i++) {
         printf("Row%d* = [", i + 1);
 
-        for (int j = 0; j < image->width; j++) {
+        for (j = 0; j < image->width; j++) {
             printf("(%d, %d, %d)", image->pixels[i][j].red, image->pixels[i][j].green, image->pixels[i][j].blue);
 
-            // Add a comma and space for all elements except the last one
+            /*Add a comma and space for all elements except the last one*/
             if (j < image->width - 1) {
                 printf(", ");
             }
@@ -224,11 +226,11 @@ void printImage(Image *image) {
         printf("]\n");
     }
 }
-
+/*
 int main() {
     const char *filename = "example.ppm";
 
     ppmToMatrix(filename);
 
     return 0;
-}
+}*/

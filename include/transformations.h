@@ -1,6 +1,8 @@
-#define PI 3.14159265
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include "parser.h"
+
 #define FILL 0
 #define RADTOANG 57.29577951
-typedef struct {
-    unsigned char r, g, b;
-} Pixel;
+
+void rotateImage(Pixel**, Pixel**, int, int, float);

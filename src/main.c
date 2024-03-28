@@ -3,16 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fsm.h"
-#include "parser.h"
+#include "ui.h"
 
 /* Perform clean up here */
 void functionA() {
     printf("Caught the exit! Goodbye~\n");
 }
 
-int main() {
+int main(int argc, char **argv) {
     FSM* f = (FSM*) malloc(sizeof(FSM));
     char* input = (char*) malloc(sizeof(char) * 1);
+    int status;
+
+    status = gtk_app(argc, argv);
+    printf("UI upp.\n");
 
     initFSM(f); 
     memset(input, ' ', sizeof(char));
@@ -27,5 +31,5 @@ int main() {
     free(f);
     free(input);
 
-    return 0;
+    return status;
 }

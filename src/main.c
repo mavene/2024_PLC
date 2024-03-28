@@ -4,6 +4,7 @@
 #include <string.h>
 #include "fsm.h"
 #include "ui.h"
+#include "parser.h"
 
 /* Perform clean up here */
 void functionA() {
@@ -15,8 +16,13 @@ int main(int argc, char **argv) {
     char* input = (char*) malloc(sizeof(char) * 1);
     int status;
 
+    /* Test UI */
     status = open_gtk_window("example.png");
 
+    /* Test Parser */
+    ppmToMatrix("example.ppm");
+
+    /* Test FSM */
     initFSM(f); 
     memset(input, ' ', sizeof(char));
 

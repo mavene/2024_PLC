@@ -34,7 +34,7 @@ static void activate (GtkApplication *app, gpointer userdata)
   gtk_widget_set_valign (box, GTK_ALIGN_CENTER);
   gtk_widget_set_halign (box, GTK_ALIGN_CENTER);
 
-  image = gtk_image_new_from_file("image.png"); 
+  image = gtk_image_new_from_file(userdata); 
   gtk_box_pack_start (GTK_BOX (box), image, FALSE, FALSE, 0);
   gtk_widget_set_halign (image, GTK_ALIGN_CENTER);
   gtk_widget_set_valign (image, GTK_ALIGN_CENTER);
@@ -51,16 +51,16 @@ static void activate (GtkApplication *app, gpointer userdata)
 
 void open_gtk_window(const char *image_path) {
     GtkApplication *app;
-    int status;
+    /*int status;*/
 
-    app = gtk_application_new("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);
+    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), (gpointer)image_path);
-    status = g_application_run(G_APPLICATION(app), 0, NULL);
+    g_application_run(G_APPLICATION(app), 0, NULL); /*status = */
     g_object_unref(app);
 }
 
 
 // int main(int argc, char **argv) {
-//     open_gtk_window("image.png");
+//     open_gtk_window("../image.png");
 //     return 0;
 // }

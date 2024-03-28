@@ -15,8 +15,7 @@ int main(int argc, char **argv) {
     char* input = (char*) malloc(sizeof(char) * 1);
     int status;
 
-    status = gtk_app(argc, argv);
-    printf("UI upp.\n");
+    status = open_gtk_window("example.png");
 
     initFSM(f); 
     memset(input, ' ', sizeof(char));

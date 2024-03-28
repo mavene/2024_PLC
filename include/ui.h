@@ -1,3 +1,3 @@
 #include <gtk/gtk.h>
 
-int gtk_app(int, char**);
+int open_gtk_window(const char*);

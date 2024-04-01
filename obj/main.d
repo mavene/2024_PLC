@@ -617,7 +617,8 @@ obj/main.o: src/main.c include/fsm.h include/ui.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvscale.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
- /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk-autocleanups.h
+ /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk-autocleanups.h \
+ include/parser.h include/fsm.h
 include/fsm.h:
 include/ui.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk.h:
@@ -1239,3 +1240,5 @@ include/ui.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvseparator.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk-autocleanups.h:
+include/parser.h:
+include/fsm.h:

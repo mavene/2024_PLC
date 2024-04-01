@@ -12,13 +12,18 @@ typedef struct {
 typedef struct {
     int width;
     int height;
+    int max_val;
+    char *filename;
     Pixel **pixels;
 } Image;
 
-void get_command(State state, char* input);
-Image *createImage(int width, int height);
-void freeImage(Image *image);
-void ppmToMatrix(const char *filename);
-void printImage(Image *image);
+void get_command(State, char*);
+int pngtoppm(char*);
+int ppmtopng(char*);
+Image *createImage(int, int, int, char*);
+void freeImage(Image*);
+Image* ppmToMatrix(char*);
+char* matrixToPPM(Image*);
+void printMatrix(Image*);
 
 #endif

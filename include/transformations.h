@@ -1,3 +1,4 @@
+#include <math.h>
 #include "parser.h"
 #define PI 3.14159265
 #define FILL 0

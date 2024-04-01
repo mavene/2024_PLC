@@ -34,10 +34,60 @@ void get_command(State state, char* input) {
 
 /* Handle any numerical input for edit commands here - angles/degrees whatever */
 
+void strip_ext(char *fname)
+{
+    char *end = fname + strlen(fname);
+
+    while (end > fname && *end != '.' && *end != '\\' && *end != '/') {
+        --end;
+    }
+    if ((end > fname && *end == '.') &&
+        (*(end - 1) != '\\' && *(end - 1) != '/')) {
+        *end = '\0';
+    }  
+}
+
+/* Conversion helpers */
+int pngtoppm(char* filename) {
+    char* command = (char*)malloc(sizeof(char)*256);
+    char* first_command = "magick ";
+    char* second_command = " -compress none ";
+    //int status;
+
+    strcpy(command, first_command);
+    strcat(command, filename);
+    strcat(command, second_command);
+    strcat(command, "example.ppm");
+
+    system(command); // status
+    free(command);
+
+    return 0; //status;
+}
+
+int ppmtopng(char* filename) {
+    char* command = (char*)malloc(sizeof(char)*256);
+    //char* filename_copy = strdup(filename);
+    char* first_command = "magick ";
+    //int status;
+
+    strcpy(command, first_command);
+    strcat(command, filename);
+    strcat(command, " ");
+
+    //strip_ext(filename_copy);
+    // strcat(command, filename_copy);
+    strcat(command, "output.png"); //.png only
+
+    system(command); // status
+    free(command);
+
+    return 0; //status;
+}
+
 /* Our bitmap parser here huehue*/
 /* output shd be a 2D array with each pointer pointing to each row's pixels*/
-
-Image *createImage(int width, int height) {
+Image *createImage(int width, int height, int max_value, char* filename) {
     Image *image = (Image *)malloc(sizeof(Image));
     if (image == NULL) {
         fprintf(stderr, "Error: Memory allocation for image failed");
@@ -46,6 +96,8 @@ Image *createImage(int width, int height) {
 
     image->width = width;
     image->height = height;
+    image->max_val = max_value;
+    image->filename = filename;
 
     /* allocate memory for pixel array */
     image->pixels = (Pixel **)malloc(height * sizeof(Pixel *));
@@ -73,7 +125,7 @@ void freeImage(Image *image) {
     free(image);
 }
 
-void ppmToMatrix(const char *filename) {
+Image* ppmToMatrix(char *filename) {
     /* open PPM file */
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
@@ -95,17 +147,15 @@ void ppmToMatrix(const char *filename) {
         exit(1);
     }
 
-    /* somehow needs this to go to read the comments i'm not sure why */
-    char nextLine[256];
-    fgets(nextLine, sizeof(nextLine), file);
-    printf("next line after magicHeader: %s", nextLine);
+    /* consume new line */
+    char line[4096];
+    fgets(line, sizeof(line), file);
+    printf("next line after magicHeader: %s", line);
 
-    /* Skip comments and read the next line after # */
-    char line[256];
+    /* skip comments and read the next line after # */
     while (fgets(line, sizeof(line), file) != NULL) {
         if (strncmp(line, "#", 1) == 0) {
-            /* Comment line, skip it */ 
-            /* printf("comment line: %s", line); */
+            printf("comment: %s\n", line);
         } else {
             /* Not a comment line, break from the loop */ 
             break;
@@ -117,7 +167,6 @@ void ppmToMatrix(const char *filename) {
     sscanf(line, "%d %d", &width, &height); /* read by line when skipping comments */
     if (width < 0 || height < 0) {
         fprintf(stderr, "Invalid width or height\n");
-        /* shd i exit? If exit, can't read the max color, but if i don't exit, it will go to the next ones (matrix related)*/
         exit(1);
     }
     printf("width: %d, height: %d\n", width, height);
@@ -130,10 +179,8 @@ void ppmToMatrix(const char *filename) {
     }
     printf("max color value: %d\n", maxColor);
 
-    /* SOMEHOW HAVE AN EMPTHY LINE AFTER MAX COLOR VALUE */
-    char nextLine2[256];
-    fgets(nextLine2, sizeof(nextLine2), file);
-    printf("next line after max color value: %s", nextLine2);
+    /* consume new line */
+    fgets(line, sizeof(line), file);
 
     /* check if number of lines tally with width and height values */
     int numLines = 0;
@@ -141,39 +188,32 @@ void ppmToMatrix(const char *filename) {
     printf("Expected NumLines: %d\n", expectedNumLines);
 
     /* initialize Image structure to store the pixels */
-    Image *image = createImage(width, height);
+    Image *image = createImage(width, height, maxColor, filename);
 
     while (fgets(line, sizeof(line), file) != NULL) {
-        /* printf("read lines: %s\n", line); */
-
-        char *token = strtok(line, " \t\n");
+        char *token = strtok(line, " ");
         while (token != NULL) {
-            /* parse RGB pixel */ 
-            int r, g, b;
-            if (sscanf(token, "%d", &r) != 1) {
-                fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
-                exit(1);
-            }
-            token = strtok(NULL, " \t\n");
-            if (token == NULL) {
-                fprintf(stderr, "Error: Incomplete RGB format in line %d\n", numLines);
-                exit(1);
-            }
-            if (sscanf(token, "%d", &g) != 1) {
-                fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
-                exit(1);
-            }
-            token = strtok(NULL, " \t\n");
-            if (token == NULL) {
-                fprintf(stderr, "Error: Incomplete RGB format in line %d\n", numLines);
-                exit(1);
-            }
-            if (sscanf(token, "%d", &b) != 1) {
-                fprintf(stderr, "Error: Invalid RGB format in line %d\n", numLines);
-                exit(1);
+
+            if (*token == '\n') {
+                break;
             }
 
-            /* printf("read pixel: %d %d %d\n", r, g, b); */
+            int r, g, b;
+            /* parse RGB pixel */ 
+            if (sscanf(token, "%d", &r) != 1) {
+                fprintf(stderr, "Error: Invalid RGB format in line %d - R\n", numLines);
+                exit(1);
+            }
+            token = strtok(NULL, " ");
+            if (sscanf(token, "%d", &g) != 1) {
+                fprintf(stderr, "Error: Invalid RGB format in line %d - G\n", numLines);
+                exit(1);
+            }
+            token = strtok(NULL, " ");
+            if (sscanf(token, "%d", &b) != 1) {
+                fprintf(stderr, "Error: Invalid RGB format in line %d - B\n", numLines);
+                exit(1);
+            }
 
             /* check if RGB values are non-negative */ 
             if (r < 0 || g < 0 || b < 0) {
@@ -202,30 +242,65 @@ void ppmToMatrix(const char *filename) {
 
             /* printf("current number of lines: %d\n", numLines); */
 
-            token = strtok(NULL, " \t\n"); /* move to the next token */ 
-        }
+            token = strtok(NULL, " "); /* move to the next token */ 
+    }
+
     }
     
     printf("Actual NumLines: %d\n", numLines);
-
-    /* print the contents of the 2D array */
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            printf("(%d, %d, %d) ", image->pixels[i][j].r, image->pixels[i][j].g, image->pixels[i][j].b);
-        }
-        printf("\n");
-    }
 
     if (numLines != expectedNumLines) {
         fprintf(stderr, "Number of lines after max color value does not match width and height\n");
         exit(1);
     }
 
-    freeImage(image);
-
     fclose(file);
+
+    return image;
 }
 
+// TODO: Store old filename, max value within Image struct?
+char* matrixToPPM(Image *image) {
+    //int i, j;
+    FILE *fptr;
+    char* output_file = "output.ppm"; // change to filename from image
+
+    fptr = fopen(output_file, "w");
+    if (!fptr) {
+        fprintf(stderr, "Error in opening file.\n");
+    }
+
+    /*Write P3 magic header*/
+    fprintf(fptr, "P3\n");
+
+    /*Write height and width*/
+    fprintf(fptr, "%d %d\n", image->width, image->height);
+
+    /*Write maximum value*/
+    fprintf(fptr, "%d\n", image->max_val); /*change to accomodate TODO above*/
+
+    /*Write out pixels*/
+    for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            fprintf(fptr, "%d %d %d ", image->pixels[i][j].r, image->pixels[i][j].g, image->pixels[i][j].b);
+        }
+        fprintf(fptr, "\n");
+    }
+
+    fclose(fptr);
+
+    return output_file;
+}
+
+void printMatrix(Image* image) {
+    /* print the contents of the 2D array */
+    for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            printf("(%d, %d, %d) ", image->pixels[i][j].r, image->pixels[i][j].g, image->pixels[i][j].b);
+        }
+        printf("\n");
+    }
+}
 
 // int main(int argc, char ** argv) {
 //     const char *filename = argv[1];

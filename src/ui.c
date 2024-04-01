@@ -53,7 +53,7 @@ void open_gtk_window(const char *image_path) {
     GtkApplication *app;
     /*int status;*/
 
-    app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE);
+    app = gtk_application_new("org.gtk.example", 0);
     g_signal_connect(app, "activate", G_CALLBACK(activate), (gpointer)image_path);
     g_application_run(G_APPLICATION(app), 0, NULL); /*status = */
     g_object_unref(app);

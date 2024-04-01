@@ -14,13 +14,34 @@ void functionA() {
 int main(int argc, char **argv) {
     FSM* f = (FSM*) malloc(sizeof(FSM));
     char* input = (char*) malloc(sizeof(char) * 1);
-    int status;
+    //int status;
+    char* output;
+    Image* image;
 
     /* Test UI */
-    status = open_gtk_window("example.png");
+    open_gtk_window("example.png");
+
+    /* Test Conversion */
+    pngtoppm("example.png");
 
     /* Test Parser */
-    ppmToMatrix("example.ppm");
+    image = ppmToMatrix("example.ppm");
+
+    // /* Matrix to PPM */
+    // matrixToPPM()
+    // printMatrix(image);
+    
+    /* Test Conversion
+    status = ppmtopng("example.ppm");
+    if (status) {
+        printf("Error with using the externals to convert to PNG.\n");
+    }*/
+
+    /* Test Writer */
+    output = matrixToPPM(image);
+    
+    /* Test Conversion */
+    ppmtopng(output);
 
     /* Test FSM */
     initFSM(f); 
@@ -36,5 +57,5 @@ int main(int argc, char **argv) {
     free(f);
     free(input);
 
-    return status;
+    return 0; //status;
 }

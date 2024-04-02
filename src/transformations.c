@@ -95,6 +95,43 @@ void EDIT_Rotate(const Image *image, Image *rotatedImage, float angle) {
     }
 }
 
+void EDIT_Rotate_new(const Image *image, Image *rotatedImage, float angle) {
+    double radian_angle = angle / 180.0 * PI;
+    double cos_radian = cos(radian_angle);
+    double sin_radian = sin(radian_angle);
+    double x_center = floor(image->width / 2);
+    double y_center = floor(image->height / 2);
+    int x, y, new_x, new_y;
+
+    for (y = 0; y < image->height; y++) {
+        for (x = 0; x < image->width; x++) {
+            // Apply rotation
+            // Slight Truncation
+            //double x_tmp = (double)(x - x_center) * cos_radian - (double)(y - y_center) * sin_radian + x_center;
+            //double y_tmp = (double)(y - y_center) * cos_radian + (double)(x - x_center) * sin_radian + y_center;
+
+            double x_tmp = (double)(x) * cos_radian - (double)(y) * sin_radian - (double)(x_center) * cos_radian + (double)(y_center) * sin_radian + x_center; //+ x_center; works with 90 and 180
+            double y_tmp = (double)(y) * cos_radian + (double)(x) * sin_radian - (double)(x_center) * sin_radian - (double)(y_center) * sin_radian + y_center; //+ y_center *2; works with 90 and 180
+
+            /* Round to nearest integer to get pixel coordinates */
+            new_x = floor(x_tmp);
+            new_y = floor(y_tmp);
+
+            //printf("Width: From %d -> %d\nHeight: From %d -> %d\n", x, new_x, y, new_y);
+
+            // Check if the new coordinates are within the image bounds
+            if (new_x < 0  || new_y < 0 || new_x >= image->width || new_y >= image->height) {
+                // replace with interpolation
+                rotatedImage->pixels[y][x].r = FILL;
+                rotatedImage->pixels[y][x].g = FILL;
+                rotatedImage->pixels[y][x].b = FILL;
+            } else {
+                rotatedImage->pixels[y][x] = image->pixels[new_y][new_x];
+            }
+        }
+    }
+}
+
 void EDIT_Transformation(const Image *image, Image *transformedImage, int x, int y, int cropWidth, int cropHeight, int dx, int dy) {
     // Calculate dimensions of the transformed image
     int transformedWidth = cropWidth;

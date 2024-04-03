@@ -65,7 +65,7 @@ Pixel bilinear_interpolate(double x, double y, long cols, long rows, Pixel **the
     return result;
 }
 
-void EDIT_Rotate(const Image *image, Image *rotatedImage, float angle) {
+void EDIT_Rotate_1(const Image *image, Image *rotatedImage, float angle) {
     double radian_angle = angle / RADTOANG;
     double cosa = cos(radian_angle);
     double sina = sin(radian_angle);
@@ -90,6 +90,84 @@ void EDIT_Rotate(const Image *image, Image *rotatedImage, float angle) {
                 rotatedImage->pixels[i][j].b = FILL;
             } else {
                 rotatedImage->pixels[i][j] = image->pixels[new_i][new_j];
+            }
+        }
+    }
+}
+
+void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rotatedHeight, float angle) {
+    double radian_angle = angle / RADTOANG;
+    double cosa = cos(radian_angle);
+    double sina = sin(radian_angle);
+    double m = image->width / 2.0;
+    double n = image->height / 2.0;
+
+    // Calculate the coordinates of the four corners of the original image
+    double x0 = -m;
+    double y0 = -n;
+    double x1 = image->width - m;
+    double y1 = -n;
+    double x2 = -m;
+    double y2 = image->height - n;
+    double x3 = image->width - m;
+    double y3 = image->height - n;
+
+    // Rotate the corner points
+    double rx0 = x0 * cosa - y0 * sina;
+    double ry0 = x0 * sina + y0 * cosa;
+    double rx1 = x1 * cosa - y1 * sina;
+    double ry1 = x1 * sina + y1 * cosa;
+    double rx2 = x2 * cosa - y2 * sina;
+    double ry2 = x2 * sina + y2 * cosa;
+    double rx3 = x3 * cosa - y3 * sina;
+    double ry3 = x3 * sina + y3 * cosa;
+
+    // Calculate the bounding box dimensions
+    double minx = fmin(fmin(rx0, rx1), fmin(rx2, rx3));
+    double maxx = fmax(fmax(rx0, rx1), fmax(rx2, rx3));
+    double miny = fmin(fmin(ry0, ry1), fmin(ry2, ry3));
+    double maxy = fmax(fmax(ry0, ry1), fmax(ry2, ry3));
+
+    *rotatedWidth = (int)ceil(maxx - minx);
+    *rotatedHeight = (int)ceil(maxy - miny);
+}
+
+void EDIT_Rotate(const Image *image, Image* RotatedImage,  int *width, int *height, float angle) {
+    // Calculate the new dimensions for the rotated image
+    // int rotatedWidth, rotatedHeight;
+
+    // Allocate memory for the rotated image if it's not already allocated
+    // if (rotatedImage->pixels == NULL) {
+    //     freeImage(rotatedImage);
+        //*rotatedImage = *createImage(rotatedWidth, rotatedHeight, image->max_val, image->filename);
+    //}
+
+    double radian_angle = angle / RADTOANG;
+    double cos_radian = cos(radian_angle);
+    double sin_radian = sin(radian_angle);
+    double x_center = floor(image->width / 2);
+    double y_center = floor(image->height / 2);
+    int x, y, new_x, new_y;
+
+    for (y = 0; y < image->height; y++) {
+        for (x = 0; x < image->width; x++) {
+            // Apply rotation
+            double x_tmp = (double)(x) * cos_radian - (double)(y) * sin_radian - (double)(x_center) * cos_radian + (double)(y_center) * sin_radian + x_center;
+            double y_tmp = (double)(y) * cos_radian + (double)(x) * sin_radian - (double)(x_center) * sin_radian - (double)(y_center) * sin_radian + y_center;
+
+            /* Round to nearest integer to get pixel coordinates */
+            new_x = floor(x_tmp);
+            new_y = floor(y_tmp);
+
+            // Check if the new coordinates are within the image bounds
+            if (new_x >= 0 && new_x < *width && new_y >= 0 && new_y < *height) {
+                // Update the pixel in the rotated image with the pixel from the original image
+                RotatedImage->pixels[y][x] = image->pixels[new_y][new_x];
+            } else {
+                // If the new coordinates are outside the image bounds, fill with FILL color
+                RotatedImage->pixels[y][x].r = FILL;
+                RotatedImage->pixels[y][x].g = FILL;
+                RotatedImage->pixels[y][x].b = FILL;
             }
         }
     }

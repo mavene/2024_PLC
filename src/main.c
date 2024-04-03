@@ -16,21 +16,22 @@ int main(int argc, char **argv) {
     //FSM* f = (FSM*) malloc(sizeof(FSM));
     //char* input = (char*) malloc(sizeof(char) * 1);
     //int status;
-    char* output;
+    //char* output;
     Image* image;
-
+    //Image* rotatedImage;
+    // Image* transformImage;
     /* Test UI */
     //open_gtk_window("example.png");
 
     /* Test Conversion */
-    pngtoppm("image.png"); // example.png
+    pngtoppm("example.png"); // example.png
 
     /* Test Parser */
     image = ppmToMatrix("example.ppm");
 
     // /* Matrix to PPM */
     // matrixToPPM()
-    // printMatrix(image);
+    printMatrix(image);
     
     /* Test Conversion
     status = ppmtopng("example.ppm");
@@ -38,22 +39,34 @@ int main(int argc, char **argv) {
         printf("Error with using the externals to convert to PNG.\n");
     }*/
 
-    /* Test Rotation -> must be separate from translate and scale for now */ 
-    Image* transformImage = createImage(image->width, image->height, image->max_val, image->filename);
-    //EDIT_Rotate_new(image, rotateImage, 360); // does not work
-    //EDIT_Rotate_new(image, rotateImage, 270); // does not work
-    //EDIT_Rotate_new(image, rotateImage, 180); // kinda works?
-    //EDIT_Rotate_new(image, rotateImage, 90); // kinda works?
+    /* Test Rotation -> smust be separate from translate and scale for now */ 
+    // calculate new width and height based off the prev
+    int *new_width = (int*)malloc(sizeof(int));
+    int *new_height = (int*)malloc(sizeof(int));
+
+    printf("%d %d", *new_width, *new_height);
+
+    EDIT_CalcRotatedDimensions(image, new_width, new_height, 90); 
+    printf("%d %d", *new_width, *new_height);
+    
+    // rotatedImage = createImage(*new_width, *new_height, image->max_val, image->filename);
+    // //rotatedImage = createImage(image->width, image->height, image->max_val, image->filename);
+    // //rotatedImage = NULL;
+    // //EDIT_Rotate_new(image, rotateImage, 360); // does not work
+    // //EDIT_Rotate_new(image, rotateImage, 270); // does not work
+    // //EDIT_Rotate_new(image, rotateImage, 180); // kinda works?
+    // //EDIT_Rotate_new(image, rotateImage, 90); // kinda works?
+    // EDIT_Rotate(image, rotatedImage, new_width, new_height, 90); 
     //EDIT_Rotate(image,rotateImage, 90);
     //EDIT_Scale(image, transformImage, 2);
-    EDIT_Transformation(image, transformImage, 50, 50, 50, 50, 0, 1); //some issus with this but its all good
+    // EDIT_Transformation(image, transformImage, 50, 50, 50, 50, 0, 1); //some issus with this but its all good
     //EDIT_Edgedetection(image, transformImage);
 
     /* Test Writer */
-    output = matrixToPPM(transformImage); // image
+    //output = matrixToPPM(rotatedImage); // image
     
     /* Test Conversion */
-    ppmtopng(output);
+    //ppmtopng(output);
 
     /* Test FSM
     initFSM(f); 
@@ -68,8 +81,8 @@ int main(int argc, char **argv) {
     atexit(functionA);
     free(f);
     free(input);*/
-    freeImage(transformImage);
-    freeImage(image);
+    //freeImage(rotatedImage);
+    //freeImage(image);
 
     return 0; //status;
 }

@@ -78,11 +78,11 @@ void EDIT_Rotate_1(const Image *image, Image *rotatedImage, float angle) {
             // Apply rotation
             double tmpx = (double)(j) * cosa - (double)(i) * sina - (double)(m) * cosa + (double)(m) + (double)(n) * sina;
             double tmpy = (double)(i) * cosa + (double)(j) * sina - (double)(m) * sina - (double)(n) * cosa + (double)(n);
-
+            //printf("%f %f\n", tmpx, tmpy);
             /* Round to nearest integer to get pixel coordinates */
             new_j = (int)round(tmpx);
             new_i = (int)round(tmpy);
-
+            //printf("%d %d\n", new_j, new_i);
             // Check if the new coordinates are within the image bounds
             if (new_j < 0 || new_j >= image->width || new_i < 0 || new_i >= image->height) {
                 rotatedImage->pixels[i][j].r = FILL;
@@ -132,42 +132,34 @@ void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rota
     *rotatedHeight = (int)ceil(maxy - miny);
 }
 
-void EDIT_Rotate(const Image *image, Image* RotatedImage,  int *width, int *height, float angle) {
-    // Calculate the new dimensions for the rotated image
-    // int rotatedWidth, rotatedHeight;
-
-    // Allocate memory for the rotated image if it's not already allocated
-    // if (rotatedImage->pixels == NULL) {
-    //     freeImage(rotatedImage);
-        //*rotatedImage = *createImage(rotatedWidth, rotatedHeight, image->max_val, image->filename);
-    //}
-
+void EDIT_Rotate(const Image *image, Image* rotatedImage, float angle) {
     double radian_angle = angle / RADTOANG;
-    double cos_radian = cos(radian_angle);
-    double sin_radian = sin(radian_angle);
-    double x_center = floor(image->width / 2);
-    double y_center = floor(image->height / 2);
-    int x, y, new_x, new_y;
+    double cosa = cos(radian_angle);
+    double sina = sin(radian_angle);
+    double m = image->width / 2.0;
+    double n = image->height / 2.0;
+    int new_i, new_j;
+    //double m1 = rotatedImage->width / 2.0;
+    //double m2 = rotatedImage->height / 2.0;
 
-    for (y = 0; y < image->height; y++) {
-        for (x = 0; x < image->width; x++) {
+    for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
             // Apply rotation
-            double x_tmp = (double)(x) * cos_radian - (double)(y) * sin_radian - (double)(x_center) * cos_radian + (double)(y_center) * sin_radian + x_center;
-            double y_tmp = (double)(y) * cos_radian + (double)(x) * sin_radian - (double)(x_center) * sin_radian - (double)(y_center) * sin_radian + y_center;
-
+            double tmpx = (double)(j) * cosa - (double)(i) * sina - (double)(m) * cosa + (double)(m) + (double)(n) * sina  ;
+            double tmpy = (double)(i) * cosa + (double)(j) * sina - (double)(m) * sina - (double)(n) * cosa + (double)(n) ;
+            //printf("%f %f\n", tmpx, tmpy);
             /* Round to nearest integer to get pixel coordinates */
-            new_x = floor(x_tmp);
-            new_y = floor(y_tmp);
 
+            new_j = (int)round(tmpx);
+            new_i = (int)round(tmpy);
+            //printf("%d %d\n", new_j, new_i);
             // Check if the new coordinates are within the image bounds
-            if (new_x >= 0 && new_x < *width && new_y >= 0 && new_y < *height) {
-                // Update the pixel in the rotated image with the pixel from the original image
-                RotatedImage->pixels[y][x] = image->pixels[new_y][new_x];
+            if (new_j < 0 || new_j >= rotatedImage->width || new_i < 0 || new_i >= rotatedImage->height) {
+                rotatedImage->pixels[i][j].r = FILL;
+                rotatedImage->pixels[i][j].g = FILL;
+                rotatedImage->pixels[i][j].b = FILL;
             } else {
-                // If the new coordinates are outside the image bounds, fill with FILL color
-                RotatedImage->pixels[y][x].r = FILL;
-                RotatedImage->pixels[y][x].g = FILL;
-                RotatedImage->pixels[y][x].b = FILL;
+                rotatedImage->pixels[new_i][new_j] = image->pixels[i][j];
             }
         }
     }

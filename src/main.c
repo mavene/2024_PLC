@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 
     // printf("%d %d \n", *new_width, *new_height);
 
-    EDIT_CalcRotatedDimensions(image, new_width, new_height, 90); 
+    EDIT_CalcRotatedDimensions(image, new_width, new_height, 270); 
     // printf("%d %d \n", *new_width, *new_height);
 
     
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     // //EDIT_Rotate_new(image, rotateImage, 270); // does not work
     // //EDIT_Rotate_new(image, rotateImage, 180); // kinda works?
     // //EDIT_Rotate_new(image, rotateImage, 90); // kinda works?
-    EDIT_Rotate(image, rotatedImage, 90); 
+    EDIT_Rotate(image, rotatedImage, 270); 
 
     //EDIT_Rotate(image,rotateImage, 90);
     //EDIT_Scale(image, transformImage, 2);

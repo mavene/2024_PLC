@@ -65,31 +65,72 @@ Pixel bilinear_interpolate(double x, double y, long cols, long rows, Pixel **the
     return result;
 }
 
-void EDIT_Rotate(const Image *image, Image *rotatedImage, float angle) {
+void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rotatedHeight, float angle) {
+    double radian_angle = angle / RADTOANG;
+    double cosa = cos(radian_angle);
+    double sina = sin(radian_angle);
+    double m = image->width / 2.0;
+    double n = image->height / 2.0;
+
+    // Calculate the coordinates of the four corners of the original image
+    double x0 = -m;
+    double y0 = -n;
+    double x1 = image->width - m;
+    double y1 = -n;
+    double x2 = -m;
+    double y2 = image->height - n;
+    double x3 = image->width - m;
+    double y3 = image->height - n;
+
+    // Rotate the corner points
+    double rx0 = x0 * cosa - y0 * sina;
+    double ry0 = x0 * sina + y0 * cosa;
+    double rx1 = x1 * cosa - y1 * sina;
+    double ry1 = x1 * sina + y1 * cosa;
+    double rx2 = x2 * cosa - y2 * sina;
+    double ry2 = x2 * sina + y2 * cosa;
+    double rx3 = x3 * cosa - y3 * sina;
+    double ry3 = x3 * sina + y3 * cosa;
+
+    // Calculate the bounding box dimensions
+    double minx = fmin(fmin(rx0, rx1), fmin(rx2, rx3));
+    double maxx = fmax(fmax(rx0, rx1), fmax(rx2, rx3));
+    double miny = fmin(fmin(ry0, ry1), fmin(ry2, ry3));
+    double maxy = fmax(fmax(ry0, ry1), fmax(ry2, ry3));
+
+    *rotatedWidth = (int)ceil(maxx - minx);
+    *rotatedHeight = (int)ceil(maxy - miny);
+}
+
+void EDIT_Rotate(const Image *image, Image* rotatedImage, float angle) {
     double radian_angle = angle / RADTOANG;
     double cosa = cos(radian_angle);
     double sina = sin(radian_angle);
     double m = image->width / 2.0;
     double n = image->height / 2.0;
     int new_i, new_j;
+    double m1 = rotatedImage->width / 2.0;
+    double n1 = rotatedImage->height / 2.0;
 
     for (int i = 0; i < image->height; i++) {
         for (int j = 0; j < image->width; j++) {
-            // Apply rotation
-            double tmpx = (double)(j) * cosa - (double)(i) * sina - (double)(m) * cosa + (double)(m) + (double)(n) * sina;
-            double tmpy = (double)(i) * cosa + (double)(j) * sina - (double)(m) * sina - (double)(n) * cosa + (double)(n);
 
+            
+            // Apply rotation
+            double tmpx = (double)(j) * cosa - (double)(i) * sina - (double)(m) * cosa + (double)(m) + (double)(n) * sina - m + m1 ;
+            double tmpy = (double)(i) * cosa + (double)(j) * sina - (double)(m) * sina - (double)(n) * cosa + (double)(n) - n + n1;
+            
             /* Round to nearest integer to get pixel coordinates */
             new_j = (int)round(tmpx);
             new_i = (int)round(tmpy);
 
             // Check if the new coordinates are within the image bounds
-            if (new_j < 0 || new_j >= image->width || new_i < 0 || new_i >= image->height) {
+            if (new_j < 0 || new_j >= rotatedImage->width || new_i < 0 || new_i >= rotatedImage->height) {
                 rotatedImage->pixels[i][j].r = FILL;
                 rotatedImage->pixels[i][j].g = FILL;
                 rotatedImage->pixels[i][j].b = FILL;
             } else {
-                rotatedImage->pixels[i][j] = image->pixels[new_i][new_j];
+                rotatedImage->pixels[new_i][new_j] = image->pixels[i][j];
             }
         }
     }

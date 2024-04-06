@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     EDIT_Rotate(image, rotatedImage, 270); 
 
     //EDIT_Rotate(image,rotateImage, 90);
-    //EDIT_Scale(image, transformImage, 2);
+    //EDIT_Scale(image, transformImage, 3 , 1);
     // EDIT_Transformation(image, transformImage, 50, 50, 50, 50, 0, 1); //some issus with this but its all good
     //EDIT_Edgedetection(image, transformImage);
 

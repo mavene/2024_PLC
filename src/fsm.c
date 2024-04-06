@@ -168,7 +168,7 @@ void transition(FSM* fsm, History* history, char* input) {
          fsm->currentState = fsm->prevState;
          break;
       case DOWNLOAD_FAIL:
-         printf("Something weent wrong with the download...");
+         printf("Something went wrong with the download...");
          fsm->currentState = fsm->prevState;
          break;
       default:
@@ -232,7 +232,10 @@ int PREVIEW_FSM(FSM* f, History* h, char* input) {
             commit(h);
             break;
          case 'N':
-            undo(h); /*TODO forgot to update the png*/
+            undo(h); // write out to replace output.png
+            printf("Reverting image\n");
+            output_ppm = matrixToPPM(*(h->currentImage));
+            ppmtopng(output_ppm);
             break;
       }
    }
@@ -297,7 +300,6 @@ void EDIT_edgeDetect_FSM(History* h) {
 
 int DOWNLOAD_FSM() {
    /* TODO: Reset the entire application */
-   printf("Add all download functions here.\n");
    printf("Check the output.png!\n");
    
    return 0;

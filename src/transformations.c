@@ -217,25 +217,85 @@ void EDIT_Transformation(const Image *image, Image *transformedImage, int x, int
 
 
 
-void EDIT_Scale(const Image *image, Image *scaledImage, int scale) {
+void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int corner) {
     // Calculate dimensions of the scaled image
-    int scaledRows = image->height;
-    int scaledCols = image->width;
+    int scaledRows = image->height ;
+    int scaledCols = image->width ;
+    //printf("Scaled Rows: %d, Scaled Cols: %d\n", scaledRows, scaledCols);
+
+    // Variables to store starting coordinates
+    int startX = 0, startY = 0;
+
+    // Determine starting coordinates based on corner
+    switch (corner) {
+        case 0:  // Top-left corner
+            startX = 0;
+            startY = 0;
+            break;
+        case 1:  // Top-right corner
+            startX = image->width - scaledCols / scale;
+            startY = 0;
+            break;
+        case 2:  // Bottom-left corner
+            startX = 0;
+            startY = image->height - scaledRows / scale;
+            break;
+        case 3:  // Bottom-right corner
+            startX = image->width - scaledCols / scale;
+            startY = image->height - scaledRows / scale;
+            break;
+        default: // Default to top-left corner
+            startX = 0;
+            startY = 0;
+            break;
+    }
+    //printf("Start X: %d, Start Y: %d\n", startX, startY);
+
+    // Iterate over each pixel in the scaled image
+    for (int i = 0; i <scaledRows; i++) {
+        for (int j = 0; j < scaledCols; j++) {
+            // Calculate corresponding pixel coordinates in the original image
+            int pre_i = startY + i / scale;
+            int pre_j = startX + j / scale;
+
+            // Ensure pre_i and pre_j are within the bounds of the original image
+            if (pre_i >= 0 && pre_i < image->height && pre_j >= 0 && pre_j < image->width) {
+                 scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
+            } else {
+                // Set pixel to black if outside the original image bounds
+                scaledImage->pixels[i - startY][j - startX].r = 0;
+                scaledImage->pixels[i - startY][j - startX].g = 0;
+                scaledImage->pixels[i - startY][j - startX].b = 0;
+            }
+        }
+    }
+}
+
+
+/*void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int x, int y) {
+    // Calculate dimensions of the scaled image
+    int scaledRows = scaledImage->height;
+    int scaledCols = scaledImage->width;
 
     // Iterate over each pixel in the scaled image
     for (int i = 0; i < scaledRows; i++) {
         for (int j = 0; j < scaledCols; j++) {
-            // Map pixel coordinates back to original image with scaling
-            int pre_i = i / scale;
-            int pre_j = j / scale;
+            // Calculate corresponding pixel coordinates in the original image
+            int pre_i = y + i / scale;
+            int pre_j = x + j / scale;
 
-            scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
+            // Ensure pre_i and pre_j are within the bounds of the original image
+            if (pre_i >= 0 && pre_i < image->height && pre_j >= 0 && pre_j < image->width) {
+                scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
+            } else {
+                // Set pixel to black if outside the original image bounds
+                scaledImage->pixels[i][j].r = 0;
+                scaledImage->pixels[i][j].g = 0;
+                scaledImage->pixels[i][j].b = 0;
+            }
         }
     }
-
-    scaledImage->width = scaledCols;
-    scaledImage->height = scaledRows;
-}
+}*/
 
 void EDIT_Edgedetection(const Image *image, Image *edgeImage){
     edgeImage->width = image->width;

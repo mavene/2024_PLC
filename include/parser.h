@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "fsm.h"
+#include "state.h"
 
 typedef struct {
     int r;
@@ -17,11 +17,13 @@ typedef struct {
     Pixel **pixels;
 } Image;
 
-void get_command(State, char*);
+void initInput(char*);
+void get_command(State state, char*);
 int pngtoppm(char*);
 int ppmtopng(char*);
 Image *createImage(int, int, int, char*);
 void freeImage(Image*);
+void freeInnerImage(Image*);
 Image* ppmToMatrix(char*);
 char* matrixToPPM(Image*);
 void printMatrix(Image*);

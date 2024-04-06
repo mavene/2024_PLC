@@ -1,4 +1,5 @@
-obj/main.o: src/main.c include/fsm.h include/ui.h \
+obj/main.o: src/main.c include/fsm.h include/history.h include/parser.h \
+ include/state.h include/ui.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gdk/gdk.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gdk/gdkconfig.h \
@@ -618,9 +619,11 @@ obj/main.o: src/main.c include/fsm.h include/ui.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
  /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk-autocleanups.h \
- include/parser.h include/fsm.h include/transformations.h \
- include/parser.h
+ include/history.h
 include/fsm.h:
+include/history.h:
+include/parser.h:
+include/state.h:
 include/ui.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gdk/gdk.h:
@@ -1241,7 +1244,4 @@ include/ui.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/deprecated/gtkvseparator.h:
 /usr/x86_64-w64-mingw32/sys-root/mingw/include/gtk-3.0/gtk/gtk-autocleanups.h:
-include/parser.h:
-include/fsm.h:
-include/transformations.h:
-include/parser.h:
+include/history.h:

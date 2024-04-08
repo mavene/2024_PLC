@@ -3,13 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "parser.h"
 #include "fsm.h"
 /* MICHELLE */
 
+void initInput(char* i) {
+    memset(i, ' ', sizeof(char));
+}
+
 /* Retrieve command */
 void get_command(State state, char* input) {
-    
     *input = getchar();
     getchar(); /* Consumes the pesky \n. Need to find a better way */
     if (*input != EOF) {
@@ -32,10 +36,58 @@ void get_command(State state, char* input) {
     }
 }
 
+void get_values(State state, int *input, int floor, int ceil) {
+    char line[5];
+    fgets(line, 5, stdin);
+    sscanf(line, "%d", input);
+    if (state == EDIT_ROTATION) {
+        if (*input != 90 && *input != 180 && *input != 270 && *input != -90 && *input != -180 && *input != -270) {
+            printf("Please only enter the following values: 90 180 270 -90 -180 -270\n");
+            get_values(state, input, floor, ceil); /* Loop back */
+        } 
+    } else if (state == EDIT_SCALING) {
+        if (ceil != 0 || floor != 0) {
+            if (*input < floor || *input > ceil) {
+                printf("Please only enter a value between %d and %d\n", floor, ceil);
+                get_values(state, input, floor, ceil); /* Loop back */
+            }
+        } else {
+            if (*input != 1 && *input != 2 && *input != 3 && *input != 4) {
+                printf("Please enter only these options below\n1. Top-left\n2. Top-right\n3. Bottom-left\n4. Bottom-right\n");
+                get_values(state, input, floor, ceil); /* Loop back */
+            } else {
+                *input -= 1; /*Convert back to index (starting from 0)*/
+            }
+        }
+    } else if (state == EDIT_TRANSLATION) {
+        if (ceil != 0 || floor != 0) {
+            if (*input < floor || *input > ceil) {
+                printf("Please only enter a value between %d and %d\n", floor, ceil);
+                get_values(state, input, floor, ceil); /* Loop back */
+            }
+        } else {
+            printf("There should be a scale specified for the inputs!\n");
+        }
+    }
+}
+
+
+/* Retrieve file path */
+// char* get_path(State state, char* input) {
+//     char line[256] = {};
+//     sscanf(line, "%s", input);
+//     if (line != EOF && access(line, F_OK)) {
+//         strip_ext(line);
+//     } else {
+//         printf("Please enter an existing file path\n");
+//         get_path(state, input); /* Loop back */
+//     }
+//     return line;
+// }
+
 /* Handle any numerical input for edit commands here - angles/degrees whatever */
 
-void strip_ext(char *fname)
-{
+void strip_ext(char *fname) {
     char *end = fname + strlen(fname);
 
     while (end > fname && *end != '.' && *end != '\\' && *end != '/') {
@@ -85,8 +137,7 @@ int ppmtopng(char* filename) {
     return 0; //status;
 }
 
-/* Our bitmap parser here huehue*/
-/* output shd be a 2D array with each pointer pointing to each row's pixels*/
+/* Output should be a struct containing a 2D array of pointers to every row's pixels*/
 Image *createImage(int width, int height, int max_value, char* filename) {
     Image *image = (Image *)malloc(sizeof(Image));
     if (image == NULL) {
@@ -105,12 +156,19 @@ Image *createImage(int width, int height, int max_value, char* filename) {
         fprintf(stderr, "Error: Memory allocation for pixel array failed\n");
         exit(1);
     }
-
     for (int i=0; i<height; i++) {
         image->pixels[i] = (Pixel *)malloc(width * sizeof(Pixel));
         if (image->pixels[i] == NULL) {
             fprintf(stderr, "Error: Memory allocation for pixel row %d failed\n", i);
             exit(1);
+        } 
+        /* If nothing went wrong, set default pixel value to 0 (black) */
+        else {
+            for (int j=0; j<width; j++) {
+                image->pixels[i][j].r = 0;
+                image->pixels[i][j].g = 0;
+                image->pixels[i][j].b = 0;
+            }
         }
     }
 
@@ -259,7 +317,6 @@ Image* ppmToMatrix(char *filename) {
     return image;
 }
 
-// TODO: Store old filename, max value within Image struct?
 char* matrixToPPM(Image *image) {
     //int i, j;
     FILE *fptr;
@@ -301,11 +358,3 @@ void printMatrix(Image* image) {
         printf("\n");
     }
 }
-
-// int main(int argc, char ** argv) {
-//     const char *filename = argv[1];
-
-//     ppmToMatrix(filename);
-
-//     return 0;
-// }

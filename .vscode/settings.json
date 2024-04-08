@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "parser.h": "c",
+        "history.h": "c",
+        "fsm.h": "c",
+        "stdio.h": "c",
+        "transformations.h": "c",
+        "stdlib.h": "c",
+        "ui.h": "c",
+        "state.h": "c"
+    }
+}

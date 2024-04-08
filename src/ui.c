@@ -6,16 +6,10 @@
 /* UI here, including preview's redo and undo feature */
 
 /* SHIVANI */
-/* Put in scanf for file paths and sanitize them here*/
-char * retrieve_file() {
-    /*Call GTK here to retrieve file */
-    return 0;
-}
-
-static void
-print_hello (GtkWidget *widget, gpointer data)
+static void close_preview (GtkWidget *widget, gpointer data)
 {
-  g_print ("Previous\n");
+  g_print ("Closing preview\n");
+  gtk_widget_destroy(data);
 }
 
 static void activate (GtkApplication *app, gpointer userdata)
@@ -39,8 +33,8 @@ static void activate (GtkApplication *app, gpointer userdata)
   gtk_widget_set_halign (image, GTK_ALIGN_CENTER);
   gtk_widget_set_valign (image, GTK_ALIGN_CENTER);
   
-  button = gtk_button_new_with_label ("Hello World");
-  g_signal_connect (button, "clicked", G_CALLBACK (print_hello), NULL);
+  button = gtk_button_new_with_label ("Close Preview");
+  g_signal_connect (button, "clicked", G_CALLBACK (close_preview), window); // NULL
   gtk_box_pack_start (GTK_BOX (box), button, FALSE, FALSE, 0);
   gtk_widget_set_halign (button, GTK_ALIGN_CENTER);
   gtk_widget_set_valign (button, GTK_ALIGN_CENTER);

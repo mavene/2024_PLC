@@ -12,7 +12,7 @@ typedef struct {
 
 void initHistory(History*);
 void undo(History*);
-void redo(History*); 
+void wipe(History*);
 void commit(History*);
 void freeHistory(History*);
 

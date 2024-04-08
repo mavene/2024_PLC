@@ -28,7 +28,7 @@ void EDIT_translation_FSM(FSM*, History*);
 void EDIT_scaling_FSM(FSM*, History*);
 void EDIT_rotation_FSM(FSM*, History*);
 void EDIT_edgeDetect_FSM(History*);
-int DOWNLOAD_FSM(void);
+int DOWNLOAD_FSM(History*);
 void END_FSM(void);
 
 #endif

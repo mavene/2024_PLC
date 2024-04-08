@@ -29,17 +29,20 @@ void get_command(State state, char* input) {
                                         *input != '2' && 
                                         *input != '3' &&
                                         *input != '4' &&
-                                        *input != '5')) {
+                                        *input != '5' &&
+                                        *input != '6')) {
             printf("Please enter only these options below\n1. Translation (Crop)\n2. Scale (Zoom)\n3. Rotation\n4. Edge Detection\n5.Preview Mode\n");
             get_command(state, input); /* Loop back */
         }
     }
 }
 
+/* Handle any numerical inputs for edit commands */
 void get_values(State state, int *input, int floor, int ceil) {
     char line[5];
     fgets(line, 5, stdin);
     sscanf(line, "%d", input);
+
     if (state == EDIT_ROTATION) {
         if (*input != 90 && *input != 180 && *input != 270 && *input != -90 && *input != -180 && *input != -270) {
             printf("Please only enter the following values: 90 180 270 -90 -180 -270\n");
@@ -71,21 +74,19 @@ void get_values(State state, int *input, int floor, int ceil) {
     }
 }
 
-
-/* Retrieve file path */
-// char* get_path(State state, char* input) {
-//     char line[256] = {};
-//     sscanf(line, "%s", input);
-//     if (line != EOF && access(line, F_OK)) {
-//         strip_ext(line);
-//     } else {
-//         printf("Please enter an existing file path\n");
-//         get_path(state, input); /* Loop back */
-//     }
-//     return line;
-// }
-
-/* Handle any numerical input for edit commands here - angles/degrees whatever */
+void get_file(char *input) {
+    char line[255];
+    fgets(line, 255, stdin);
+    sscanf(line, "%s", input);
+    
+    FILE *fp = fopen(input, "r");
+    if (fp != NULL) {
+        fclose(fp);
+    } else {
+        printf("File does not exist!\nPlease try again\n");
+        get_file(input);
+    }
+}
 
 void strip_ext(char *fname) {
     char *end = fname + strlen(fname);
@@ -109,7 +110,7 @@ int pngtoppm(char* filename) {
     strcpy(command, first_command);
     strcat(command, filename);
     strcat(command, second_command);
-    strcat(command, "example.ppm");
+    strcat(command, "./media/working.ppm");
 
     system(command); // status
     free(command);
@@ -129,7 +130,7 @@ int ppmtopng(char* filename) {
 
     //strip_ext(filename_copy);
     // strcat(command, filename_copy);
-    strcat(command, "output.png"); //.png only
+    strcat(command, "./media/output.png"); //.png only
 
     system(command); // status
     free(command);
@@ -320,7 +321,7 @@ Image* ppmToMatrix(char *filename) {
 char* matrixToPPM(Image *image) {
     //int i, j;
     FILE *fptr;
-    char* output_file = "output.ppm"; // change to filename from image
+    char* output_file = "./media/output.ppm";
 
     fptr = fopen(output_file, "w");
     if (!fptr) {

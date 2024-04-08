@@ -25,13 +25,16 @@ void commit(History* h) {
     printf("Applying transformation\n");
     freeImage(*(h->currentImage));
     *(h->currentImage) = *(h->transformedImage);
-    *(h->transformedImage) = NULL;;
+    *(h->transformedImage) = NULL;
 }
 
 
-void redo(History* h) {
-    printf("Hello");
-    /*Swap the transformed to current*/
+void wipe(History* h) {
+    free(h->filePath);
+    freeImage(*(h->currentImage));
+    h->filePath = NULL;
+    *(h->currentImage) = NULL;
+    *(h->transformedImage) = NULL;
 }
 
 void freeHistory(History *h) {

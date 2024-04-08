@@ -59,13 +59,12 @@ void transition(FSM* fsm, History* history, char* input) {
          switch (*input)
          {
          case 'Y':
-            if (fsm->prevState == EDIT_TRANSLATION ||
+            if (fsm->prevState == EDIT_MODE ||
+                  fsm->prevState == EDIT_TRANSLATION ||
                   fsm->prevState == EDIT_SCALING ||
                   fsm->prevState == EDIT_ROTATION ||
                   fsm->prevState == EDIT_EDGE_DETECT) {
                   fsm->currentState = EDIT_MODE;
-            } else if (fsm->prevState == EDIT_MODE) {
-               fsm->currentState = DOWNLOAD_MODE;
             } else if (fsm->prevState == UPLOAD_MODE) {
                fsm->currentState = PARSER_PPM;
             }
@@ -98,7 +97,6 @@ void transition(FSM* fsm, History* history, char* input) {
    }
    else if (fsm->currentState == EDIT_MODE) {
       EDIT_FSM(fsm, input);
-      history->initStatus = 1;
 
       switch (*input) 
       {
@@ -117,35 +115,41 @@ void transition(FSM* fsm, History* history, char* input) {
       case '5':
          fsm->currentState = PREVIEW_MODE;
          break;
+      case '6':
+         fsm->currentState = DOWNLOAD_MODE;
       }
       fsm->prevState = EDIT_MODE;
    }
    else if (fsm->currentState == EDIT_TRANSLATION) {
       EDIT_translation_FSM(fsm, history); 
+      history->initStatus = 1;
 
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_TRANSLATION;
    }
    else if (fsm->currentState == EDIT_SCALING) {
       EDIT_scaling_FSM(fsm, history); 
+      history->initStatus = 1;
 
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_SCALING;
    }
    else if (fsm->currentState == EDIT_ROTATION) {
       EDIT_rotation_FSM(fsm, history); 
+      history->initStatus = 1;
 
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_ROTATION;
    }
    else if (fsm->currentState == EDIT_EDGE_DETECT) {
       EDIT_edgeDetect_FSM(history);
+      history->initStatus = 1;
 
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_EDGE_DETECT;
    }
    else if (fsm->currentState == DOWNLOAD_MODE) {
-      statusCode = DOWNLOAD_FSM();
+      statusCode = DOWNLOAD_FSM(history);
 
       if (statusCode) {
          fsm->currentState = ERROR;
@@ -197,10 +201,11 @@ int UPLOAD_FSM(FSM* f, History* h, char* input) {
       1. User provides filename input
       2. Saves path */
    //printf("Add all upload functions here\n");
-   char* file = "example.png";
-   printf("Got a file! %s\n", file);
-   h->filePath = file;
-   printf("History obtained file at %s\n", h->filePath);
+   char* input_file = (char*)malloc(sizeof(char)*256);
+   printf("File path of image to process:\n");
+   get_file(input_file);
+
+   h->filePath = input_file;
 
    return 0;
 }
@@ -216,11 +221,11 @@ int PREVIEW_FSM(FSM* f, History* h, char* input) {
       printf("Found transformed image\n");
       output_ppm = matrixToPPM(*(h->transformedImage));
       ppmtopng(output_ppm);
-      open_gtk_window("output.png");
+      open_gtk_window("./media/output.png");
    } else if (h->initStatus) {
-      open_gtk_window("output.png");
+      open_gtk_window("./media/output.png");
    } else {
-      open_gtk_window(h->filePath); // TODO: Add in statusCode handler
+      open_gtk_window(h->filePath);
    }
    
    printf("Would you like to continue with this image? Y (Yes) or N (No).\n");
@@ -238,6 +243,9 @@ int PREVIEW_FSM(FSM* f, History* h, char* input) {
             ppmtopng(output_ppm);
             break;
       }
+   } else if (h->initStatus) {
+      output_ppm = matrixToPPM(*(h->currentImage));
+      ppmtopng(output_ppm);
    }
    
    return 0;
@@ -249,8 +257,8 @@ int PARSE_PPM_FSM(FSM* f, History* h, char* input) {
       2. Confirms user that the image selected is correct s*/
    //printf("Add all parsing functions here\n");
    Image* image;
-   pngtoppm("example.png");
-   image = ppmToMatrix("example.ppm");
+   pngtoppm(h->filePath);
+   image = ppmToMatrix("./media/working.ppm");
    //printMatrix(image);
    *(h->currentImage) = image;
    return 0;
@@ -260,7 +268,7 @@ int PARSE_PPM_FSM(FSM* f, History* h, char* input) {
 void EDIT_FSM(FSM* f, char* input) {
    /* Call all edit functions
       1. User chooses edit tool */
-   printf("Editing tools:\n1. Translation (Crop)\n2. Scale (Zoom)\n3. Rotation\n4. Edge Detection\n5. Preview Mode\n");
+   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Preview\n6. Download\n");
    get_command(f->currentState, input);
 }
 
@@ -352,9 +360,15 @@ void EDIT_edgeDetect_FSM(History* h) {
    *(h->transformedImage) = transformImage;
 }
 
-int DOWNLOAD_FSM() {
-   /* TODO: Reset the entire application */
-   printf("Check the output.png!\n");
+int DOWNLOAD_FSM(History* h) {
+   /* Download latest version, reset history and prompt user to check output file */
+   char* output_ppm;
+   output_ppm = matrixToPPM(*(h->currentImage));
+   ppmtopng(output_ppm);
+
+   wipe(h);
+
+   printf("Check the /media folder for the output.png\n");
    
    return 0;
 }

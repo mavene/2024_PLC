@@ -20,7 +20,7 @@ typedef struct {
 void initInput(char*);
 void get_command(State, char*);
 void get_values(State, int*, int, int);
-void get_file(char*);
+int get_file(char*);
 void strip_ext(char*);
 int pngtoppm(char*);
 int ppmtopng(char*);

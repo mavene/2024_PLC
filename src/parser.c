@@ -19,10 +19,12 @@ void get_command(State state, char* input) {
     if (*input != EOF) {
         if (state == IDLE && (*input != '1' && *input != '2')) {
             printf("Please enter only these options below\n1. Upload file\n2. Exit program\n");
+            while((*input = getchar()) != EOF && *input != '\n');
             get_command(state, input); /* Loop back */
         } 
         else if (state == PREVIEW_MODE && (*input != 'Y' && *input != 'N')) {
             printf("Please enter only Y (Yes) or N (No)\n");
+            while((*input = getchar()) != EOF && *input != '\n');
             get_command(state, input); /* Loop back */
         }
         else if (state == EDIT_MODE && (*input != '1' && 
@@ -32,6 +34,7 @@ void get_command(State state, char* input) {
                                         *input != '5' &&
                                         *input != '6')) {
             printf("Please enter only these options below\n1. Translation (Crop)\n2. Scale (Zoom)\n3. Rotation\n4. Edge Detection\n5.Preview Mode\n");
+            while((*input = getchar()) != EOF && *input != '\n');
             get_command(state, input); /* Loop back */
         }
     }
@@ -39,8 +42,8 @@ void get_command(State state, char* input) {
 
 /* Handle any numerical inputs for edit commands */
 void get_values(State state, int *input, int floor, int ceil) {
-    char line[5];
-    fgets(line, 5, stdin);
+    char line[6];
+    fgets(line, 6, stdin);
     sscanf(line, "%d", input);
 
     if (state == EDIT_ROTATION) {
@@ -74,30 +77,35 @@ void get_values(State state, int *input, int floor, int ceil) {
     }
 }
 
-void get_file(char *input) {
+/* Handle file path input for upload mode */
+int get_file(char *input) {
+    int status1, status2;
     char line[255];
-    fgets(line, 255, stdin);
-    sscanf(line, "%s", input);
-    
+
+    if (fgets(line, 255, stdin)) {
+        status1 = 1;
+    }
+    if (sscanf(line, "%s", input)) {
+        status2 = 1;
+    }
+    if (!status1 || !status2) {
+        return 1;
+    }
+
     FILE *fp = fopen(input, "r");
     if (fp != NULL) {
         fclose(fp);
     } else {
-        printf("File does not exist!\nPlease try again\n");
+        printf("File cannot be opened!\nPlease input another:\n");
         get_file(input);
     }
-}
 
-void strip_ext(char *fname) {
-    char *end = fname + strlen(fname);
-
-    while (end > fname && *end != '.' && *end != '\\' && *end != '/') {
-        --end;
+    if (!strstr(input, ".png")) {
+        printf("Only PNG files are supported at this time.\nPlease enter a path to a PNG:\n");
+        get_file(input);
     }
-    if ((end > fname && *end == '.') &&
-        (*(end - 1) != '\\' && *(end - 1) != '/')) {
-        *end = '\0';
-    }  
+
+    return 0;
 }
 
 /* Conversion helpers */
@@ -105,41 +113,43 @@ int pngtoppm(char* filename) {
     char* command = (char*)malloc(sizeof(char)*256);
     char* first_command = "magick ";
     char* second_command = " -compress none ";
-    //int status;
+    int statusCode = 0;
 
     strcpy(command, first_command);
     strcat(command, filename);
     strcat(command, second_command);
     strcat(command, "./media/working.ppm");
 
-    system(command); // status
+    if (system(command) != 0) {
+        statusCode = 1;
+    }
     free(command);
 
-    return 0; //status;
+    return statusCode;
 }
 
 int ppmtopng(char* filename) {
     char* command = (char*)malloc(sizeof(char)*256);
-    //char* filename_copy = strdup(filename);
     char* first_command = "magick ";
-    //int status;
+    int statusCode = 0;
 
     strcpy(command, first_command);
     strcat(command, filename);
     strcat(command, " ");
 
-    //strip_ext(filename_copy);
-    // strcat(command, filename_copy);
-    strcat(command, "./media/output.png"); //.png only
+    strcat(command, "./media/output.png");
 
-    system(command); // status
+    if (system(command) != 0) {
+        statusCode = 1;
+    }
     free(command);
 
-    return 0; //status;
+    return statusCode;
 }
 
-/* Output should be a struct containing a 2D array of pointers to every row's pixels*/
+/* Construct image matrix */
 Image *createImage(int width, int height, int max_value, char* filename) {
+    int i, j;
     Image *image = (Image *)malloc(sizeof(Image));
     if (image == NULL) {
         fprintf(stderr, "Error: Memory allocation for image failed");
@@ -157,7 +167,7 @@ Image *createImage(int width, int height, int max_value, char* filename) {
         fprintf(stderr, "Error: Memory allocation for pixel array failed\n");
         exit(1);
     }
-    for (int i=0; i<height; i++) {
+    for (i=0; i<height; i++) {
         image->pixels[i] = (Pixel *)malloc(width * sizeof(Pixel));
         if (image->pixels[i] == NULL) {
             fprintf(stderr, "Error: Memory allocation for pixel row %d failed\n", i);
@@ -165,7 +175,7 @@ Image *createImage(int width, int height, int max_value, char* filename) {
         } 
         /* If nothing went wrong, set default pixel value to 0 (black) */
         else {
-            for (int j=0; j<width; j++) {
+            for (j=0; j<width; j++) {
                 image->pixels[i][j].r = 0;
                 image->pixels[i][j].g = 0;
                 image->pixels[i][j].b = 0;
@@ -176,8 +186,10 @@ Image *createImage(int width, int height, int max_value, char* filename) {
     return image;
 }
 
+/* Frees image */
 void freeImage(Image *image) {
-    for (int i = 0; i < image->height; i++) {
+    int i;
+    for (i = 0; i < image->height; i++) {
         free(image->pixels[i]);
     }
     free(image->pixels);
@@ -185,6 +197,15 @@ void freeImage(Image *image) {
 }
 
 Image* ppmToMatrix(char *filename) {
+    char magicHeader[3];
+    char line[4096];
+    int width, height;
+    int maxColor;
+    int r, g, b;
+    int numLines = 0;
+    char* token;
+    Image* image;
+
     /* open PPM file */
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
@@ -194,7 +215,6 @@ Image* ppmToMatrix(char *filename) {
     printf("filename: %s\n", filename);
 
     /* read PPM magic header */
-    char magicHeader[3];
     fscanf(file, "%2s", magicHeader); /* read from file */
     magicHeader[2] = '\0';
     printf("magic header: %s\n", magicHeader);
@@ -207,7 +227,6 @@ Image* ppmToMatrix(char *filename) {
     }
 
     /* consume new line */
-    char line[4096];
     fgets(line, sizeof(line), file);
     printf("next line after magicHeader: %s", line);
 
@@ -222,7 +241,6 @@ Image* ppmToMatrix(char *filename) {
     }
 
     /* read width, height, and maximum color value */
-    int width, height;
     sscanf(line, "%d %d", &width, &height); /* read by line when skipping comments */
     if (width < 0 || height < 0) {
         fprintf(stderr, "Invalid width or height\n");
@@ -231,7 +249,6 @@ Image* ppmToMatrix(char *filename) {
     printf("width: %d, height: %d\n", width, height);
 
     /* read maximum color value */
-    int maxColor;
     if (fscanf(file, "%d", &maxColor) != 1 || maxColor < 0 || maxColor > 255) {
         fprintf(stderr, "Invalid maximum color value\n");
         exit(1);
@@ -242,22 +259,20 @@ Image* ppmToMatrix(char *filename) {
     fgets(line, sizeof(line), file);
 
     /* check if number of lines tally with width and height values */
-    int numLines = 0;
     int expectedNumLines = width * height;
     printf("Expected NumLines: %d\n", expectedNumLines);
 
     /* initialize Image structure to store the pixels */
-    Image *image = createImage(width, height, maxColor, filename);
+    image = createImage(width, height, maxColor, filename);
 
     while (fgets(line, sizeof(line), file) != NULL) {
-        char *token = strtok(line, " ");
+        token = strtok(line, " ");
         while (token != NULL) {
 
             if (*token == '\n') {
                 break;
             }
 
-            int r, g, b;
             /* parse RGB pixel */ 
             if (sscanf(token, "%d", &r) != 1) {
                 fprintf(stderr, "Error: Invalid RGB format in line %d - R\n", numLines);

@@ -3,12 +3,15 @@
 #include <stdlib.h>
 
 void initHistory(History *h) {
-    h->initStatus = 0;
-    h->filePath = NULL;
-    Image** currPtr = (Image**)malloc(sizeof(Image*));
-    Image** transPtr = (Image**)malloc(sizeof(Image*));
+    Image** currPtr;
+    Image** transPtr;
+    currPtr = (Image**)malloc(sizeof(Image*));
+    transPtr = (Image**)malloc(sizeof(Image*));
     *currPtr = NULL;
     *transPtr = NULL;
+
+    h->initStatus = 0;
+    h->filePath = NULL;
     h->currentImage = currPtr;
     h->transformedImage = transPtr;
 }
@@ -30,14 +33,17 @@ void commit(History* h) {
 
 
 void wipe(History* h) {
+    /* Wipe old history data/reset*/
     free(h->filePath);
     freeImage(*(h->currentImage));
+    h->initStatus = 0;
     h->filePath = NULL;
     *(h->currentImage) = NULL;
     *(h->transformedImage) = NULL;
 }
 
 void freeHistory(History *h) {
+    /* Frees history */
     free(h->filePath);
     freeImage((*h->currentImage));
     freeImage((*h->transformedImage));

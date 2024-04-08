@@ -36,6 +36,41 @@ void get_command(State state, char* input) {
     }
 }
 
+void get_values(State state, int *input, int floor, int ceil) {
+    char line[5];
+    fgets(line, 5, stdin);
+    sscanf(line, "%d", input);
+    if (state == EDIT_ROTATION) {
+        if (*input != 90 && *input != 180 && *input != 270 && *input != -90 && *input != -180 && *input != -270) {
+            printf("Please only enter the following values: 90 180 270 -90 -180 -270\n");
+            get_values(state, input, floor, ceil); /* Loop back */
+        } 
+    } else if (state == EDIT_SCALING) {
+        if (ceil != 0 || floor != 0) {
+            if (*input < floor || *input > ceil) {
+                printf("Please only enter a value between %d and %d\n", floor, ceil);
+                get_values(state, input, floor, ceil); /* Loop back */
+            }
+        } else {
+            if (*input != 1 && *input != 2 && *input != 3 && *input != 4) {
+                printf("Please enter only these options below\n1. Top-left\n2. Top-right\n3. Bottom-left\n4. Bottom-right\n");
+                get_values(state, input, floor, ceil); /* Loop back */
+            } else {
+                *input -= 1; /*Convert back to index (starting from 0)*/
+            }
+        }
+    } else if (state == EDIT_TRANSLATION) {
+        if (ceil != 0 || floor != 0) {
+            if (*input < floor || *input > ceil) {
+                printf("Please only enter a value between %d and %d\n", floor, ceil);
+                get_values(state, input, floor, ceil); /* Loop back */
+            }
+        } else {
+            printf("There should be a scale specified for the inputs!\n");
+        }
+    }
+}
+
 
 /* Retrieve file path */
 // char* get_path(State state, char* input) {
@@ -323,11 +358,3 @@ void printMatrix(Image* image) {
         printf("\n");
     }
 }
-
-// int main(int argc, char ** argv) {
-//     const char *filename = argv[1];
-
-//     ppmToMatrix(filename);
-
-//     return 0;
-// }

@@ -11,7 +11,7 @@ OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 CC := C:/msys64/mingw64/bin/gcc.exe
 INCLUDE := -Iinclude
 GTKINCLUDE := $$(PKG_CONFIG_PATH=C:/msys64/mingw64/lib/pkgconfig pkg-config --cflags gtk+-3.0)
-CPPFLAGS := -MMD -MP #-BC:/msys64/mingw64/bin
+CPPFLAGS := -MMD -MP
 CFLAGS := -Wall -Werror -pedantic -ansi 
 GTKLIBS := $$(PKG_CONFIG_PATH=C:/msys64/mingw64/lib/pkgconfig pkg-config --libs gtk+-3.0)
 LDLIBS := -lm
@@ -25,7 +25,6 @@ $(EXE): $(OBJ) | $(BIN_DIR)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) --static $(CPPFLAGS) $(CFLAGS) -c -std=c99 $(INCLUDE) $(GTKINCLUDE) $< -o $@ $(LDLIBS) $(GTKLIBS)
-#$(CC) $(INCLUDE) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ $(LDLIBS)
 
 $(BIN_DIR) $(OBJ_DIR):
 	mkdir -p $@

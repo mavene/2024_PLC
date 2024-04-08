@@ -16,29 +16,22 @@ void initHistory(History *h) {
 void undo(History* h) {
     /* Wipe transformedImage */
     printf("Undoing transformation\n");
-    // printf("Transformed now at %p\n", (void*) *(h->transformedImage));
-    // printf("Current now at %p\n", (void*) *(h->currentImage));
     freeImage(*(h->transformedImage));
     *(h->transformedImage) = NULL;
-    // printf("Transformed now at %p\n", (void*) *(h->transformedImage));
-    // printf("Current now at %p\n", (void*) *(h->currentImage));
-}
-
-void redo(History* h) {
-    printf("Hello");
-    /*Swap the transformed to current*/
 }
 
 void commit(History* h) {
     /* Wipe old image and replace with transformed image*/
     printf("Applying transformation\n");
-    // printf("Transformed now at %p\n", (void*) *(h->transformedImage));
-    // printf("Current now at %p\n", (void*) *(h->currentImage));
     freeImage(*(h->currentImage));
     *(h->currentImage) = *(h->transformedImage);
-    *(h->transformedImage) = NULL;
-    // printf("Transformed now at %p\n", (void*) *(h->transformedImage));
-    // printf("Current now at %p\n", (void*) *(h->currentImage));
+    *(h->transformedImage) = NULL;;
+}
+
+
+void redo(History* h) {
+    printf("Hello");
+    /*Swap the transformed to current*/
 }
 
 void freeHistory(History *h) {

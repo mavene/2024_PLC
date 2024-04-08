@@ -18,7 +18,8 @@ typedef struct {
 } Image;
 
 void initInput(char*);
-void get_command(State state, char*);
+void get_command(State, char*);
+void get_values(State, int*, int, int);
 int pngtoppm(char*);
 int ppmtopng(char*);
 Image *createImage(int, int, int, char*);

@@ -28,6 +28,11 @@ void get_command(State state, char* input) {
             while((*input = getchar()) != EOF && *input != '\n');
             get_command(state, input); /* Loop back */
         }
+        else if (state == EDIT_COLOURMAP && (*input != 'R' && *input != 'G' && *input != 'B')) {
+            printf("Please enter R, G or B\n");
+            while((*input = getchar()) != EOF && *input != '\n');
+            get_command(state, input);
+        }
         else if (state == EDIT_MODE && (*input != '1' && 
                                         *input != '2' && 
                                         *input != '3' &&
@@ -38,7 +43,7 @@ void get_command(State state, char* input) {
                                         *input != '8')) {
             printf("Please enter only these options below\n1. Translation (Crop)\n2. Scale (Zoom)\n3. Rotation\n4. Edge Detection\n5.Preview Mode\n");
             while((*input = getchar()) != EOF && *input != '\n');
-            get_command(state, input); /* Loop back */
+            get_command(state, input);
         }
     }
 }

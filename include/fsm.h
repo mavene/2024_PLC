@@ -29,6 +29,7 @@ void EDIT_scaling_FSM(FSM*, History*);
 void EDIT_rotation_FSM(FSM*, History*);
 void EDIT_edgeDetect_FSM(History*);
 void EDIT_greyMap_FSM(History*);
+void EDIT_colourMap_FSM(FSM*, History*, char*);
 int DOWNLOAD_FSM(History*);
 void END_FSM(void);
 

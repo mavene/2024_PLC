@@ -12,3 +12,6 @@ void EDIT_Scale(const Image*, Image*, int, int);
 Pixel applySobel(const Image*, int, int y);
 void EDIT_Edgedetection(const Image*, Image*);
 void EDIT_GrayscaleMap(const Image*, const Image*);
+void EDIT_RedMap(const Image*, const Image*);
+void EDIT_BlueMap(const Image*, const Image*);
+void EDIT_GreenMap(const Image*, const Image*);

@@ -236,3 +236,38 @@ void EDIT_GrayscaleMap(const Image *image, const Image *edgeImage) {
         }
     }
 }
+
+/* Perform grayscale mapping filter */
+void EDIT_RedMap(const Image *image, const Image *transformImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            transformImage->pixels[i][j].r = image->pixels[i][j].r;
+            transformImage->pixels[i][j].g = 0;
+            transformImage->pixels[i][j].b = 0;
+        }
+    }
+}
+
+
+/* Perform grayscale mapping filter */
+void EDIT_GreenMap(const Image *image, const Image *transformImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            transformImage->pixels[i][j].r = 0;
+            transformImage->pixels[i][j].g = image->pixels[i][j].g;
+            transformImage->pixels[i][j].b = 0;
+        }
+    }
+}
+
+
+/* Perform grayscale mapping filter */
+void EDIT_BlueMap(const Image *image, const Image *transformImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            transformImage->pixels[i][j].r = 0;
+            transformImage->pixels[i][j].g = 0;
+            transformImage->pixels[i][j].b = image->pixels[i][j].b;
+        }
+    }
+}

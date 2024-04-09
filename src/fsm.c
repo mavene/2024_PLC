@@ -66,7 +66,8 @@ void transition(FSM* fsm, History* history, char* input) {
                   fsm->prevState == EDIT_SCALING ||
                   fsm->prevState == EDIT_ROTATION ||
                   fsm->prevState == EDIT_EDGE_DETECT || 
-                  fsm->prevState == EDIT_GREYMAP) {
+                  fsm->prevState == EDIT_GREYMAP ||
+                  fsm->prevState == EDIT_COLOURMAP) {
                   fsm->currentState = EDIT_MODE;
             } else if (fsm->prevState == UPLOAD_MODE) {
                fsm->currentState = PARSER_PPM;
@@ -80,7 +81,8 @@ void transition(FSM* fsm, History* history, char* input) {
                         fsm->prevState == EDIT_ROTATION || 
                         fsm->prevState == EDIT_SCALING || 
                         fsm->prevState == EDIT_EDGE_DETECT ||
-                        fsm->prevState == EDIT_GREYMAP) {
+                        fsm->prevState == EDIT_GREYMAP ||
+                        fsm->prevState == EDIT_COLOURMAP) {
                fsm->currentState = EDIT_MODE;
             }
             break;
@@ -120,13 +122,13 @@ void transition(FSM* fsm, History* history, char* input) {
          fsm->currentState = EDIT_GREYMAP;
          break;
       case '6':
-         fsm->currentState = PREVIEW_MODE;
+         fsm->currentState = EDIT_COLOURMAP;
          break;
       case '7':
-         fsm->currentState = DOWNLOAD_MODE;
+         fsm->currentState = PREVIEW_MODE;
          break;
       case '8':
-         fsm->currentState = END;
+         fsm->currentState = DOWNLOAD_MODE;
          break;
       }
       fsm->prevState = EDIT_MODE;
@@ -165,6 +167,13 @@ void transition(FSM* fsm, History* history, char* input) {
 
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_GREYMAP;
+   }
+   else if (fsm->currentState == EDIT_COLOURMAP) {
+      EDIT_colourMap_FSM(fsm, history, input); /* Apply redmapping transformation */
+      history->initStatus = 1;
+
+      fsm->currentState = PREVIEW_MODE;
+      fsm->prevState = EDIT_COLOURMAP;
    }
    else if (fsm->currentState == DOWNLOAD_MODE) {
       statusCode = DOWNLOAD_FSM(history); /* Clean up artifacts and download PNG */
@@ -295,7 +304,7 @@ int PARSE_PPM_FSM(FSM* f, History* h, char* input) {
 void EDIT_FSM(FSM* f, char* input) {
    /* Call all edit mode functions
       1. Display edit tools to users */
-   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Greymap filter\n6. Preview\n7. Download\n8. Exit (be sure to download the image!)\n");
+   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Greymap filter\n6. Colourmap filter\n7. Preview\n8. Download\n");
    get_command(f->currentState, input);
 }
 
@@ -398,7 +407,7 @@ void EDIT_edgeDetect_FSM(History* h) {
    *(h->transformedImage) = transformImage;
 }
 
-/* EDIT edge detection state handler */
+/* EDIT greyMap state handler */
 void EDIT_greyMap_FSM(History* h) {
    /* Calls all greymap mode functions
       1. Create image to track transformation
@@ -407,6 +416,26 @@ void EDIT_greyMap_FSM(History* h) {
    Image* transformImage;
    transformImage = createImage((*h->currentImage)->width, (*h->currentImage)->height, (*h->currentImage)->max_val);
    EDIT_GrayscaleMap(*(h->currentImage), transformImage);
+   *(h->transformedImage) = transformImage;
+}
+
+/* EDIT redMap state handler */
+void EDIT_colourMap_FSM(FSM* f, History* h, char* input) {
+   /* Calls all redmap mode functions
+      1. Create image to track transformation
+      2. Set all other colour channels to 0
+      3. Update pointer in History to transformed image */
+   Image* transformImage;
+   transformImage = createImage((*h->currentImage)->width, (*h->currentImage)->height, (*h->currentImage)->max_val);
+   printf("Which colour map would you like to apply? (R, G, B)\n");
+   get_command(f->currentState, input);
+   if (*input == 'R') {
+       EDIT_RedMap(*(h->currentImage), transformImage);
+   } else if (*input == 'G') {
+       EDIT_GreenMap(*(h->currentImage), transformImage);
+   } else {
+       EDIT_BlueMap(*(h->currentImage), transformImage);
+   }
    *(h->transformedImage) = transformImage;
 }
 

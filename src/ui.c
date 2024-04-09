@@ -1,17 +1,17 @@
+/* GTK UI for Preview Mode */
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-
-
-/* UI here, including preview's redo and undo feature */
-
 /* SHIVANI */
+
+/* Callback - closes preview */
 static void close_preview (GtkWidget *widget, gpointer data)
 {
   g_print ("Closing preview\n");
   gtk_widget_destroy(data);
 }
 
+/* Layout elements in GTK application - image, button etc. */
 static void activate (GtkApplication *app, gpointer userdata)
 {
   GtkWidget *window;
@@ -43,18 +43,12 @@ static void activate (GtkApplication *app, gpointer userdata)
   gtk_widget_show_all (window);
 }
 
+/* Create GTK App and pass in image file path from user */
 void open_gtk_window(const char *image_path) {
     GtkApplication *app;
-    /*int status;*/
-
     app = gtk_application_new("org.gtk.example", 0);
+
     g_signal_connect(app, "activate", G_CALLBACK(activate), (gpointer)image_path);
-    g_application_run(G_APPLICATION(app), 0, NULL); /*status = */
+    g_application_run(G_APPLICATION(app), 0, NULL);
     g_object_unref(app);
 }
-
-
-// int main(int argc, char **argv) {
-//     open_gtk_window("../image.png");
-//     return 0;
-// }

@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "history.h"
 #include <stdlib.h>
+/* DIAN */
 
+/* Initialize History */
 void initHistory(History *h) {
     Image** currPtr;
     Image** transPtr;
@@ -16,24 +18,23 @@ void initHistory(History *h) {
     h->transformedImage = transPtr;
 }
 
+/* Wipe transformedImage and keep current working copy */
 void undo(History* h) {
-    /* Wipe transformedImage */
     printf("Undoing transformation\n");
     freeImage(*(h->transformedImage));
     *(h->transformedImage) = NULL;
 }
 
+/* Wipe current working copy and replace with transformed image*/
 void commit(History* h) {
-    /* Wipe old image and replace with transformed image*/
     printf("Applying transformation\n");
     freeImage(*(h->currentImage));
     *(h->currentImage) = *(h->transformedImage);
     *(h->transformedImage) = NULL;
 }
 
-
+/* Wipe old history data - reset*/
 void wipe(History* h) {
-    /* Wipe old history data/reset*/
     free(h->filePath);
     freeImage(*(h->currentImage));
     h->initStatus = 0;
@@ -42,12 +43,8 @@ void wipe(History* h) {
     *(h->transformedImage) = NULL;
 }
 
+/* Frees history 
+NOTE: Current Image, Transformed Image and file path is alrdy freed when we exit FSM */
 void freeHistory(History *h) {
-    /* Frees history */
-    free(h->filePath);
-    freeImage((*h->currentImage));
-    freeImage((*h->transformedImage));
-    free(h->currentImage);
-    free(h->transformedImage);
-    free(h);
+    free(h); 
 }

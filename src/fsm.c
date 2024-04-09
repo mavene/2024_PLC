@@ -12,6 +12,7 @@ void initFSM(FSM *fsm) {
    fsm->prevState = START;
 }
 
+/* FSM transitions */
 void transition(FSM* fsm, History* history, char* input) {
    int statusCode = 0;
 
@@ -118,6 +119,9 @@ void transition(FSM* fsm, History* history, char* input) {
          break;
       case '6':
          fsm->currentState = DOWNLOAD_MODE;
+         break;
+      case '7':
+         fsm->currentState = END;
       }
       fsm->prevState = EDIT_MODE;
    }
@@ -186,24 +190,29 @@ void transition(FSM* fsm, History* history, char* input) {
    }
 }
 
+/* Frees the FSM */
 void freeFSM(FSM *f) {
     free(f);
 }
 
 /* START state handler*/
 void START_FSM() {
+   /* Calls all start mode functions
+      1. Display options to users */
    printf("Press 1 to continue and upload an image or 2 to exit.\n");
 }
 
 /* IDLE state handler*/
 void IDLE_FSM(FSM* f, char* input) {
+   /* Calls all idle mode functions
+      1. Prompt user to input command to proceed with or exit program */
    get_command(f->currentState, input);
 }
 
 /* UPLOAD state handler */
 int UPLOAD_FSM(FSM* f, History* h, char* input) {
-   /* Call all upload_mode functions
-      1. User provides filename input
+   /* Calls all upload mode functions
+      1. Prompt user for image file path
       2. Saves path to history */
    int statusCode = 0;
    char* input_file = (char*)malloc(sizeof(char)*256);
@@ -217,9 +226,10 @@ int UPLOAD_FSM(FSM* f, History* h, char* input) {
 
 /* PREVIEW state handler */
 int PREVIEW_FSM(FSM* f, History* h, char* input) {
-   /* Call all preview_mode functions
-      1. Calls UI functions with the correct file path
-      2. Prompts user for which version to keep */
+   /* Calls all preview mode functions
+      1. Calls UI to display current working image 
+      2. Prompts user for which version to keep
+      3. Save to or discard transformed image from history */
    int statusCode = 0;
    char* output_ppm;
 
@@ -257,10 +267,9 @@ int PREVIEW_FSM(FSM* f, History* h, char* input) {
 }
 
 int PARSE_PPM_FSM(FSM* f, History* h, char* input) {
-   /* Call all parsing functions
-      1. Calls UI functions with the file path
-      2. Confirms user that the image selected is correct s*/
-   int statusCode = 0;
+   /* Calls all parsing functions
+      1. Calls conversion helpers from parser - PNG -> PPM -> Matrix (Pixel**) */
+   int statusCode;
    Image* image;
 
    statusCode = pngtoppm(h->filePath);
@@ -271,17 +280,19 @@ int PARSE_PPM_FSM(FSM* f, History* h, char* input) {
 
 /* EDIT state handler */
 void EDIT_FSM(FSM* f, char* input) {
-   /* Call all edit functions
-      1. User chooses edit tool */
-   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Preview\n6. Download\n");
+   /* Call all edit mode functions
+      1. Display edit tools to users */
+   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Preview\n6. Download\n7. Exit (be sure to download the image!)\n");
    get_command(f->currentState, input);
 }
 
 /* EDIT translation state handler */
 void EDIT_translation_FSM(FSM* f, History* h) {
-   /* Call all translation functions
+   /* Calls all translation (crop) mode functions
       1. Create image to track transformation
-      2. Update pointer in History to transformed image */
+      2. Prompt user for inputs - coordinates and lengths
+      3. Apply crop to image
+      4. Update pointer in History to transformed image */
    Image* transformImage;
    int *x_start = (int*)malloc(sizeof(int));
    int *y_start = (int*)malloc(sizeof(int));
@@ -299,7 +310,7 @@ void EDIT_translation_FSM(FSM* f, History* h) {
    printf("Crop height?\n");
    get_values(f->currentState, y_length, 0, (*h->currentImage)->height -1 - *y_start);
 
-   transformImage = createImage(*x_length, *y_length, (*h->currentImage)->max_val, (*h->currentImage)->filename);
+   transformImage = createImage(*x_length, *y_length, (*h->currentImage)->max_val);
    
    EDIT_Crop(*(h->currentImage), transformImage, *x_start, *y_start, *x_length, *y_length);
    *(h->transformedImage) = transformImage;
@@ -312,14 +323,16 @@ void EDIT_translation_FSM(FSM* f, History* h) {
 
 /* EDIT scaling state handler */
 void EDIT_scaling_FSM(FSM* f, History* h) {
-   /* Call all scaling functions
+   /* Calls all scaling mode functions
       1. Create image to track transformation
-      2. Update pointer in History to transformed image */
+      2. Prompt user for inputs - scale factor and corner
+      3. Apply scale to image
+      4. Update pointer in History to transformed image */
    Image* transformImage;
    int *scale = (int*)malloc(sizeof(int));
    int *corner = (int*)malloc(sizeof(int));
 
-   transformImage = createImage((*h->currentImage)->width, (*h->currentImage)->height, (*h->currentImage)->max_val, (*h->currentImage)->filename);
+   transformImage = createImage((*h->currentImage)->width, (*h->currentImage)->height, (*h->currentImage)->max_val);
 
    printf("Scale by how much? (2-5x)\n");
    get_values(f->currentState, scale, 2, 5);
@@ -335,9 +348,11 @@ void EDIT_scaling_FSM(FSM* f, History* h) {
 
 /* EDIT rotation state handler */
 void EDIT_rotation_FSM(FSM* f, History* h) {
-   /* Call all translation functions
+   /* Calls all rotation mode functions
       1. Create image to track transformation
-      2. Update pointer in History to transformed image */
+      2. Prompt user for inputs - angle of rotation ()
+      3. Apply rotation to image
+      4. Update pointer in History to transformed image */
    Image* transformImage;
    int *new_width = (int*)malloc(sizeof(int));
    int *new_height = (int*)malloc(sizeof(int));
@@ -345,11 +360,11 @@ void EDIT_rotation_FSM(FSM* f, History* h) {
    *new_width = (*h->currentImage)->width;
    *new_height = (*h->currentImage)->height;
 
-   printf("Rotate by how much? (90, 180, 270 or its negative equivalents)\n");
+   printf("Rotate by how much? (90, 180, 270 or their negative equivalent)\n");
    get_values(f->currentState, angle, 0, 0);
 
    EDIT_CalcRotatedDimensions(*(h->currentImage), new_width, new_height, *angle);
-   transformImage = createImage(*new_width, *new_height, (*h->currentImage)->max_val, (*h->currentImage)->filename);
+   transformImage = createImage(*new_width, *new_height, (*h->currentImage)->max_val);
    EDIT_Rotate(*(h->currentImage), transformImage, *angle);
    *(h->transformedImage) = transformImage;
    
@@ -360,14 +375,21 @@ void EDIT_rotation_FSM(FSM* f, History* h) {
 
 /* EDIT edge detection state handler */
 void EDIT_edgeDetect_FSM(History* h) {
+   /* Calls all translation (crop) mode functions
+      1. Create image to track transformation
+      2. Apply Sobel kernel to image - edge detection across RGB channels
+      3. Update pointer in History to transformed image */
    Image* transformImage;
-   transformImage = createImage((*h->currentImage)->width, (*h->currentImage)->height, (*h->currentImage)->max_val, (*h->currentImage)->filename);
+   transformImage = createImage((*h->currentImage)->width, (*h->currentImage)->height, (*h->currentImage)->max_val);
    EDIT_Edgedetection(*(h->currentImage), transformImage);
    *(h->transformedImage) = transformImage;
 }
 
 int DOWNLOAD_FSM(History* h) {
-   /* Download latest version, reset history and prompt user to check output file */
+   /* Calls all download mode functions
+      1. Calls conversion helpers from parser - Matrix (Pixel**) -> PPM -> PNG
+      2. Wipe all old data from history
+      3. Prompt user to check /media folder for final image */
    int statusCode = 0;
    char* output_ppm;
 
@@ -382,5 +404,7 @@ int DOWNLOAD_FSM(History* h) {
 
 /* END state handler */
 void END_FSM() {
-   printf("Exiting program.\n"); /*Replace with atexit with clean-up*/
+   /* Calls all end mode functions
+      1. Displays message upon exit */
+   printf("Exiting program.\n");
 }

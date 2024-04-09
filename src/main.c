@@ -6,11 +6,14 @@
 #include "ui.h"
 #include "history.h"
 
-void functionA() {
+/* Print goodbye cuz why not */
+void goodbye() {
     printf("Goodbye~\n");
 }
 
+
 int main(int argc, char **argv) {
+    /* Initialize all submodules */
     FSM* f = (FSM*) malloc(sizeof(FSM));
     if (f == NULL) {
         printf("Error with allocating FSM.\n");
@@ -23,24 +26,24 @@ int main(int argc, char **argv) {
     if (input == NULL) {
         printf("Error with allocating Input.\n");
     }
-
-    /* Initialise */
     printf("Welcome.\n");
     initFSM(f); 
     initHistory(h);
     initInput(input);
 
+    /* Run program */
     while(f->currentState != END) {
         transition(f, h, input);
     }
     END_FSM();
-    atexit(functionA);
 
+    /* Final clean-up */
     free(input);
     freeHistory(h);
     freeFSM(f);
 
-    atexit(functionA);
+    /* Goodbye message */
+    atexit(goodbye);
 
     return 0;
 }

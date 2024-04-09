@@ -1,3 +1,4 @@
+/* Enumerate different FSM states. */
 typedef enum {
     START,
     IDLE,
@@ -14,6 +15,7 @@ typedef enum {
     END  
 } State;
 
+/* Enumerate different Error states. */
 typedef enum {
    UPLOAD_FAIL,
    PARSE_FAIL,

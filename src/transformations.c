@@ -43,7 +43,7 @@ void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rota
     *rotatedHeight = (int)ceil(maxy - miny);
 }
 
-/* Performs rotation on image */
+/* Performs clockwise rotation on image */
 void EDIT_Rotate(const Image *image, Image* rotatedImage, float angle) {
     double radian_angle = angle / RADTOANG;
     double cosa = cos(radian_angle);
@@ -212,7 +212,7 @@ Pixel applySobel(const Image *image, int x, int y) {
 }
 
 /* Performs edge detection on image */
-void EDIT_Edgedetection(const Image *image, Image *edgeImage){
+void EDIT_Edgedetection(const Image *image, Image *edgeImage) {
     /* Retrieve dimensions of image */
     edgeImage->width = image->width;
     edgeImage->height = image->height;
@@ -225,14 +225,14 @@ void EDIT_Edgedetection(const Image *image, Image *edgeImage){
     }
 }
 
-/* Greyscale filter - not implemented for now
-void adjustLuminosity(const Image *image, const Image *edgeImage){
+/* Perform grayscale mapping filter */
+void EDIT_GrayscaleMap(const Image *image, const Image *edgeImage) {
      for (int i = 0; i < image->height; i++) {
         for (int j = 0; j < image->width; j++) {
-            float average = (0.3*image->pixels[i][j].r + 0.59*image->pixels[i][j].g + 0.1*image->pixels[i][j].b) / 2;
+            float average = (0.3*image->pixels[i][j].r + 0.59*image->pixels[i][j].g + 0.1*image->pixels[i][j].b) / 3;
             edgeImage->pixels[i][j].r = average;
             edgeImage->pixels[i][j].g = average;
             edgeImage->pixels[i][j].b = average;
         }
     }
-} */
+}

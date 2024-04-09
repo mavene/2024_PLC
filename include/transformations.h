@@ -11,4 +11,4 @@ void EDIT_Crop(const Image*, Image*, int, int, int, int);
 void EDIT_Scale(const Image*, Image*, int, int);
 Pixel applySobel(const Image*, int, int y);
 void EDIT_Edgedetection(const Image*, Image*);
-/* void adjustLuminosity(const Image*, const Image*); */
+void EDIT_GrayscaleMap(const Image*, const Image*);

@@ -34,7 +34,8 @@ void get_command(State state, char* input) {
                                         *input != '4' &&
                                         *input != '5' &&
                                         *input != '6' &&
-                                        *input != '7')) {
+                                        *input != '7' &&
+                                        *input != '8')) {
             printf("Please enter only these options below\n1. Translation (Crop)\n2. Scale (Zoom)\n3. Rotation\n4. Edge Detection\n5.Preview Mode\n");
             while((*input = getchar()) != EOF && *input != '\n');
             get_command(state, input); /* Loop back */

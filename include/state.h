@@ -9,6 +9,7 @@ typedef enum {
     EDIT_ROTATION,
     EDIT_SCALING,
     EDIT_EDGE_DETECT,
+    EDIT_GREYMAP,
     PREVIEW_MODE,
     DOWNLOAD_MODE,
     ERROR,

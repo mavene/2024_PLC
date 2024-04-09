@@ -37,7 +37,6 @@ int pngtoppm(char*);
 int ppmtopng(char*);
 Image *createImage(int, int, int);
 void freeImage(Image*);
-void freeInnerImage(Image*);
 Image* ppmToMatrix(char*);
 char* matrixToPPM(Image*);
 void printMatrix(Image*);

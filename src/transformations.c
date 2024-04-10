@@ -219,8 +219,8 @@ void EDIT_Transformation(const Image *image, Image *transformedImage, int x, int
 
 void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int corner) {
     // Calculate dimensions of the scaled image
-    int scaledRows = image->height ;
-    int scaledCols = image->width ;
+    int scaledRows = image->height;
+    int scaledCols = image->width;
     //printf("Scaled Rows: %d, Scaled Cols: %d\n", scaledRows, scaledCols);
 
     // Variables to store starting coordinates
@@ -261,12 +261,13 @@ void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int corner) {
             // Ensure pre_i and pre_j are within the bounds of the original image
             if (pre_i >= 0 && pre_i < image->height && pre_j >= 0 && pre_j < image->width) {
                  scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
-            } else {
-                // Set pixel to black if outside the original image bounds
-                scaledImage->pixels[i - startY][j - startX].r = 0;
-                scaledImage->pixels[i - startY][j - startX].g = 0;
-                scaledImage->pixels[i - startY][j - startX].b = 0;
             }
+            // } else {
+            //     // Set pixel to black if outside the original image bounds
+            //     scaledImage->pixels[i - startY][j - startX].r = 0;
+            //     scaledImage->pixels[i - startY][j - startX].g = 0;
+            //     scaledImage->pixels[i - startY][j - startX].b = 0;
+            // }
         }
     }
 }

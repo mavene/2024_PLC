@@ -1,28 +1,7 @@
 #ifndef FSM_H_ 
 #define FSM_H_
 
-typedef enum {
-    START,
-    IDLE,
-    UPLOAD_MODE,
-    PARSER_PPM,
-    EDIT_MODE,
-    EDIT_TRANSLATION,
-    EDIT_ROTATION,
-    EDIT_SCALING,
-    EDIT_EDGE_DETECT,
-    PREVIEW_MODE,
-    DOWNLOAD_MODE,
-    ERROR,
-    END  
-} State;
-
-typedef enum {
-   UPLOAD_FAIL,
-   PARSE_FAIL,
-   PREVIEW_FAIL,
-   DOWNLOAD_FAIL
-} Error;
+#include "history.h"
 
 /*
     Define the FSM object as a struct.
@@ -37,17 +16,21 @@ typedef struct {
 } FSM;
 
 void initFSM(FSM*);
-void transition(FSM*, char*);
+void transition(FSM*, History*, char*);
+void freeFSM(FSM*);
 void START_FSM(void);
 void IDLE_FSM(FSM*, char*);
-int UPLOAD_FSM(void);
-int PREVIEW_FSM(FSM*, char*);
+int UPLOAD_FSM(FSM*, History*, char*);
+int PREVIEW_FSM(FSM*, History*, char*);
+int PARSE_PPM_FSM(FSM*, History*, char*);
 void EDIT_FSM(FSM*, char*);
-void EDIT_translation_FSM(void);
-void EDIT_scaling_FSM(void);
-void EDIT_rotation_FSM(void);
-void EDIT_edgeDetect_FSM(void);
-int DOWNLOAD_FSM(void);
+void EDIT_translation_FSM(FSM*, History*);
+void EDIT_scaling_FSM(FSM*, History*);
+void EDIT_rotation_FSM(FSM*, History*);
+void EDIT_edgeDetect_FSM(History*);
+void EDIT_greyMap_FSM(History*);
+void EDIT_colourMap_FSM(FSM*, History*, char*);
+int DOWNLOAD_FSM(History*);
 void END_FSM(void);
 
 #endif

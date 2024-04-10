@@ -1,70 +1,11 @@
-/* Basic editing features - rotate, scale and translate, redo and undo */
-/* NITHYA*/
+/* Basic editing features - rotate, scale, crop and edge detection */
 #include <stdio.h>
 #include <stdlib.h>
 #include "transformations.h"
 #include "parser.h"
+/* NITHYA, SHIVANI */
 
-Pixel applySobel(const Image *image, int x, int y) {
-    // Sobel operator kernels for horizontal and vertical gradients
-    int kernelX[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
-    int kernelY[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
-
-    int sumX = 0, sumY = 0;
-    for (int i = -1; i <= 1; i++) {
-        for (int j = -1; j <= 1; j++) {
-            int pixelX = x + j;
-            int pixelY = y + i;
-
-            // Apply kernel to pixel
-            if (pixelX >= 0 && pixelX < image->width && pixelY >= 0 && pixelY < image->height) {
-                sumX += image->pixels[pixelY][pixelX].r * kernelX[i + 1][j + 1];
-                sumY += image->pixels[pixelY][pixelX].r * kernelY[i + 1][j + 1];
-            }
-        }
-    }
-
-    // Calculate gradient magnitude
-    int magnitude = (int)sqrt(sumX * sumX + sumY * sumY);
-
-    // Apply thresholding to convert to binary edge image
-    if (magnitude > 128) {
-        return (Pixel){255, 255, 255}; // White for edges
-    } else {
-        return (Pixel){FILL, FILL, FILL}; // Black for background
-    }
-}
-
-Pixel bilinear_interpolate(double x, double y, long cols, long rows, Pixel **the_image) {
-    double fraction_x, fraction_y, one_minus_x, one_minus_y;
-    int ceil_x, ceil_y, floor_x, floor_y;
-    Pixel result = {0};
-
-    // Check if the coordinates are within the image bounds
-    if (x < 0.0 || x >= (double)(cols - 1) || y < 0.0 || y >= (double)(rows - 1))
-        return result;
-
-    // Calculate floor and ceil coordinates
-    floor_x = (int)floor(x);
-    floor_y = (int)floor(y);
-    ceil_x = (int)ceil(x);
-    ceil_y = (int)ceil(y);
-
-    // Calculate fractions for interpolation
-    fraction_x = x - floor(x);
-    fraction_y = y - floor(y);
-    one_minus_x = 1.0 - fraction_x;
-    one_minus_y = 1.0 - fraction_y;
-
-    result.r = one_minus_y * (one_minus_x * the_image[floor_y][floor_x].r + fraction_x * the_image[floor_y][ceil_x].r) +
-               fraction_y * (one_minus_x * the_image[ceil_y][floor_x].r + fraction_x * the_image[ceil_y][ceil_x].r);
-    result.g = one_minus_y * (one_minus_x * the_image[floor_y][floor_x].g + fraction_x * the_image[floor_y][ceil_x].g) +
-               fraction_y * (one_minus_x * the_image[ceil_y][floor_x].g + fraction_x * the_image[ceil_y][ceil_x].g);
-    result.b = one_minus_y * (one_minus_x * the_image[floor_y][floor_x].b + fraction_x * the_image[floor_y][ceil_x].b) +
-               fraction_y * (one_minus_x * the_image[ceil_y][floor_x].b + fraction_x * the_image[ceil_y][ceil_x].b);
-    return result;
-}
-
+/* Calculate new dimensions for rotation*/
 void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rotatedHeight, float angle) {
     double radian_angle = angle / RADTOANG;
     double cosa = cos(radian_angle);
@@ -72,7 +13,7 @@ void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rota
     double m = image->width / 2.0;
     double n = image->height / 2.0;
 
-    // Calculate the coordinates of the four corners of the original image
+    /* Calculate the coordinates of the four corners of the original image */
     double x0 = -m;
     double y0 = -n;
     double x1 = image->width - m;
@@ -82,7 +23,7 @@ void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rota
     double x3 = image->width - m;
     double y3 = image->height - n;
 
-    // Rotate the corner points
+    /* Rotate the corner points */
     double rx0 = x0 * cosa - y0 * sina;
     double ry0 = x0 * sina + y0 * cosa;
     double rx1 = x1 * cosa - y1 * sina;
@@ -92,7 +33,7 @@ void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rota
     double rx3 = x3 * cosa - y3 * sina;
     double ry3 = x3 * sina + y3 * cosa;
 
-    // Calculate the bounding box dimensions
+    /* Calculate the bounding box dimensions */
     double minx = fmin(fmin(rx0, rx1), fmin(rx2, rx3));
     double maxx = fmax(fmax(rx0, rx1), fmax(rx2, rx3));
     double miny = fmin(fmin(ry0, ry1), fmin(ry2, ry3));
@@ -102,6 +43,7 @@ void EDIT_CalcRotatedDimensions(const Image *image, int *rotatedWidth, int *rota
     *rotatedHeight = (int)ceil(maxy - miny);
 }
 
+/* Performs clockwise rotation on image */
 void EDIT_Rotate(const Image *image, Image* rotatedImage, float angle) {
     double radian_angle = angle / RADTOANG;
     double cosa = cos(radian_angle);
@@ -114,17 +56,16 @@ void EDIT_Rotate(const Image *image, Image* rotatedImage, float angle) {
 
     for (int i = 0; i < image->height; i++) {
         for (int j = 0; j < image->width; j++) {
-
             
-            // Apply rotation
+            /* Calculate new pixel coordinates to swap */
             double tmpx = (double)(j) * cosa - (double)(i) * sina - (double)(m) * cosa + (double)(m) + (double)(n) * sina - m + m1 ;
             double tmpy = (double)(i) * cosa + (double)(j) * sina - (double)(m) * sina - (double)(n) * cosa + (double)(n) - n + n1;
             
-            /* Round to nearest integer to get pixel coordinates */
+            /* Round to nearest integer to get exact coordinates */
             new_j = (int)round(tmpx);
             new_i = (int)round(tmpy);
 
-            // Check if the new coordinates are within the image bounds
+            /* Check if the new coordinates are within the image bounds */
             if (new_j < 0 || new_j >= rotatedImage->width || new_i < 0 || new_i >= rotatedImage->height) {
                 rotatedImage->pixels[i][j].r = FILL;
                 rotatedImage->pixels[i][j].g = FILL;
@@ -136,73 +77,37 @@ void EDIT_Rotate(const Image *image, Image* rotatedImage, float angle) {
     }
 }
 
-void EDIT_Rotate_new(const Image *image, Image *rotatedImage, float angle) {
-    double radian_angle = angle / 180.0 * PI;
-    double cos_radian = cos(radian_angle);
-    double sin_radian = sin(radian_angle);
-    double x_center = floor(image->width / 2);
-    double y_center = floor(image->height / 2);
-    int x, y, new_x, new_y;
-
-    for (y = 0; y < image->height; y++) {
-        for (x = 0; x < image->width; x++) {
-            // Apply rotation
-            // Slight Truncation
-            //double x_tmp = (double)(x - x_center) * cos_radian - (double)(y - y_center) * sin_radian + x_center;
-            //double y_tmp = (double)(y - y_center) * cos_radian + (double)(x - x_center) * sin_radian + y_center;
-
-            double x_tmp = (double)(x) * cos_radian - (double)(y) * sin_radian - (double)(x_center) * cos_radian + (double)(y_center) * sin_radian + x_center; //+ x_center; works with 90 and 180
-            double y_tmp = (double)(y) * cos_radian + (double)(x) * sin_radian - (double)(x_center) * sin_radian - (double)(y_center) * sin_radian + y_center; //+ y_center *2; works with 90 and 180
-
-            /* Round to nearest integer to get pixel coordinates */
-            new_x = floor(x_tmp);
-            new_y = floor(y_tmp);
-
-            //printf("Width: From %d -> %d\nHeight: From %d -> %d\n", x, new_x, y, new_y);
-
-            // Check if the new coordinates are within the image bounds
-            if (new_x < 0  || new_y < 0 || new_x >= image->width || new_y >= image->height) {
-                // replace with interpolation
-                rotatedImage->pixels[y][x].r = FILL;
-                rotatedImage->pixels[y][x].g = FILL;
-                rotatedImage->pixels[y][x].b = FILL;
-            } else {
-                rotatedImage->pixels[y][x] = image->pixels[new_y][new_x];
-            }
-        }
-    }
-}
-
-void EDIT_Transformation(const Image *image, Image *transformedImage, int x, int y, int cropWidth, int cropHeight, int dx, int dy) {
-    // Calculate dimensions of the transformed image
+/* Performs crop on image */
+void EDIT_Crop(const Image *image, Image *transformedImage, int x, int y, int cropWidth, int cropHeight) {
+    /* Retrieve dimensions of transformed image */
     int transformedWidth = cropWidth;
     int transformedHeight = cropHeight;
 
-    // Iterate over each pixel in the transformed image
+    /* Iterate over each pixel in the transformed image */
     for (int i = 0; i < transformedHeight; i++) {
         for (int j = 0; j < transformedWidth; j++) {
-            // Calculate original coordinates after considering cropping and moving
-            int originalX = j + dx;
-            int originalY = i + dy;
+            /* Calculate original coordinates after considering cropping and moving */
+            int originalX = j ;
+            int originalY = i ;
 
-            // Check if the original coordinates are within the bounds of the cropped area
+            /* Check if the original coordinates are within the bounds of the cropped area */
             if (originalX >= 0 && originalX < cropWidth && originalY >= 0 && originalY < cropHeight) {
-                // Map cropped coordinates to the original image coordinates
+                /* Map cropped coordinates to the original image coordinates */
                 int mappedX = x + originalX;
                 int mappedY = y + originalY;
 
-                // Check if the mapped coordinates are within the bounds of the original image
+                /* Check if the mapped coordinates are within the bounds of the original image */
                 if (mappedX >= 0 && mappedX < image->width && mappedY >= 0 && mappedY < image->height) {
-                    // Copy pixel from the original image
+                    /* Copy pixel from the original image */
                     transformedImage->pixels[i][j] = image->pixels[mappedY][mappedX];
                 } else {
-                    // If the mapped coordinates are outside the image bounds, fill with FILL color
+                    /* If the mapped coordinates are outside the image bounds, fill with FILL color */
                     transformedImage->pixels[i][j].r = FILL;
                     transformedImage->pixels[i][j].g = FILL;
                     transformedImage->pixels[i][j].b = FILL;
                 }
             } else {
-                // If the original coordinates are outside the cropped area, fill with FILL color
+                /* If the original coordinates are outside the cropped area, fill with FILL color */
                 transformedImage->pixels[i][j].r = FILL;
                 transformedImage->pixels[i][j].g = FILL;
                 transformedImage->pixels[i][j].b = FILL;
@@ -210,55 +115,54 @@ void EDIT_Transformation(const Image *image, Image *transformedImage, int x, int
         }
     }
 
-    // Update the width and height of the transformed image
+    /* Update the width and height of the transformed image */
     transformedImage->width = transformedWidth;
     transformedImage->height = transformedHeight;
 }
 
 
-
+/* Performs scaling on image */
 void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int corner) {
-    // Calculate dimensions of the scaled image
-    int scaledRows = image->height;
-    int scaledCols = image->width;
-    //printf("Scaled Rows: %d, Scaled Cols: %d\n", scaledRows, scaledCols);
 
-    // Variables to store starting coordinates
+    /* Retrieve dimensions of the scaled image */
+    int scaledRows = image->height ;
+    int scaledCols = image->width ;
+
+    /* Variables to store starting coordinates */
     int startX = 0, startY = 0;
 
-    // Determine starting coordinates based on corner
+    /* Determine starting coordinates based on corner */
     switch (corner) {
-        case 0:  // Top-left corner
+        case 0:  /* Top-left corner */
             startX = 0;
             startY = 0;
             break;
-        case 1:  // Top-right corner
+        case 1:  /* Top-right corner */
             startX = image->width - scaledCols / scale;
             startY = 0;
             break;
-        case 2:  // Bottom-left corner
+        case 2:  /* Bottom-left corner */
             startX = 0;
             startY = image->height - scaledRows / scale;
             break;
-        case 3:  // Bottom-right corner
+        case 3:  /* Bottom-right corner */
             startX = image->width - scaledCols / scale;
             startY = image->height - scaledRows / scale;
             break;
-        default: // Default to top-left corner
+        default: /* Default to top-left corner */
             startX = 0;
             startY = 0;
             break;
     }
-    //printf("Start X: %d, Start Y: %d\n", startX, startY);
 
-    // Iterate over each pixel in the scaled image
+    /* Iterate over each pixel in the scaled image */
     for (int i = 0; i <scaledRows; i++) {
         for (int j = 0; j < scaledCols; j++) {
-            // Calculate corresponding pixel coordinates in the original image
+            /* Calculate corresponding pixel coordinates in the original image */
             int pre_i = startY + i / scale;
             int pre_j = startX + j / scale;
 
-            // Ensure pre_i and pre_j are within the bounds of the original image
+            /* Ensure pre_i and pre_j are within the bounds of the original image */
             if (pre_i >= 0 && pre_i < image->height && pre_j >= 0 && pre_j < image->width) {
                  scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
             }
@@ -272,36 +176,50 @@ void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int corner) {
     }
 }
 
+/* Calculate convolution of image */
+Pixel applySobel(const Image *image, int x, int y) {
+    /* Sobel operator kernels for horizontal and vertical direction */
+    int kernelX[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+    int kernelY[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
-/*void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int x, int y) {
-    // Calculate dimensions of the scaled image
-    int scaledRows = scaledImage->height;
-    int scaledCols = scaledImage->width;
+    /* Iterate through each pixel */
+    int sumX = 0, sumY = 0;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            int pixelX = x + j;
+            int pixelY = y + i;
 
-    // Iterate over each pixel in the scaled image
-    for (int i = 0; i < scaledRows; i++) {
-        for (int j = 0; j < scaledCols; j++) {
-            // Calculate corresponding pixel coordinates in the original image
-            int pre_i = y + i / scale;
-            int pre_j = x + j / scale;
+            /* Apply kernel to colour channels - assume linear */
+            if (pixelX >= 0 && pixelX < image->width && pixelY >= 0 && pixelY < image->height) {
+                sumX += image->pixels[pixelY][pixelX].r * kernelX[i][j];
+                sumX += image->pixels[pixelY][pixelX].g * kernelX[i][j];
+                sumX += image->pixels[pixelY][pixelX].b * kernelX[i][j];
 
-            // Ensure pre_i and pre_j are within the bounds of the original image
-            if (pre_i >= 0 && pre_i < image->height && pre_j >= 0 && pre_j < image->width) {
-                scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
-            } else {
-                // Set pixel to black if outside the original image bounds
-                scaledImage->pixels[i][j].r = 0;
-                scaledImage->pixels[i][j].g = 0;
-                scaledImage->pixels[i][j].b = 0;
+                sumY += image->pixels[pixelY][pixelX].r * kernelY[i][j];
+                sumY += image->pixels[pixelY][pixelX].g * kernelY[i][j];
+                sumY += image->pixels[pixelY][pixelX].b * kernelY[i][j];
             }
         }
     }
-}*/
 
-void EDIT_Edgedetection(const Image *image, Image *edgeImage){
+    /* Calculate gradient magnitude */
+    int magnitude = (int)sqrt(sumX * sumX + sumY * sumY);
+
+    /* Set threshold to determine edges from background */
+    if (magnitude > 128) {
+        return (Pixel){255, 255, 255}; /* White for edges */
+    } else {
+        return (Pixel){FILL, FILL, FILL}; /* Black for background */
+    }
+}
+
+/* Performs edge detection on image */
+void EDIT_Edgedetection(const Image *image, Image *edgeImage) {
+    /* Retrieve dimensions of image */
     edgeImage->width = image->width;
     edgeImage->height = image->height;
 
+    /* Call Sobel helper above */
     for (int i = 0; i < image->height; i++) {
         for (int j = 0; j < image->width; j++) {
             edgeImage->pixels[i][j] = applySobel(image, j, i);
@@ -309,130 +227,49 @@ void EDIT_Edgedetection(const Image *image, Image *edgeImage){
     }
 }
 
-/*
-int main() {
-    Example image dimensions
-    int rows = 14;
-    int cols = 6;
-    // Angle of rotation (in degrees)
-    float angle = 90.0;
-    // Scaling factor
-    int scale = 2;
-    // Parameters for cropping and moving
-    int x = 0;
-    int y = 0;
-    int cropWidth = 3;
-    int cropHeight = 3;
-    int dx = 0;
-    int dy = 1;
-
-    // Allocate memory for the original and rotated images
-    Image image, rotatedImage, scaledImage, transformedImage,edgeImage;
-    image.width = cols;
-    image.height = rows;
-    image.pixels = (Pixel **)malloc(rows * sizeof(Pixel *));
-    rotatedImage.width = cols;
-    rotatedImage.height = rows;
-    rotatedImage.pixels = (Pixel **)malloc(rows * sizeof(Pixel *));
-    scaledImage.width = cols ;
-    scaledImage.height = rows ;
-    scaledImage.pixels = (Pixel **)malloc((rows) * sizeof(Pixel *));
-    transformedImage.width = cropWidth;
-    transformedImage.height = cropHeight;
-    transformedImage.pixels = (Pixel **)malloc(cropHeight * sizeof(Pixel *));
-    edgeImage.width = cols;
-    edgeImage.height = rows;
-    edgeImage.pixels = (Pixel **)malloc(rows * sizeof(Pixel *));
-    
-    for (int i = 0; i < rows; i++) {
-        image.pixels[i] = (Pixel *)malloc(cols * sizeof(Pixel));
-        rotatedImage.pixels[i] = (Pixel *)malloc(cols * sizeof(Pixel));
-        scaledImage.pixels[i] = (Pixel *)malloc(cols * sizeof(Pixel));
-        edgeImage.pixels[i] = (Pixel *)malloc(cols * sizeof(Pixel));
-    }
-    for (int i = 0; i < cropHeight; i++) {
-        transformedImage.pixels[i] = (Pixel *)malloc(cropWidth * sizeof(Pixel));
-    }
-
-    // Fill the original image with example data (create a diagonal line)
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            if (i == j || i==j+1 || i==j+2) {
-                image.pixels[i][j].r = 155;
-                image.pixels[i][j].g = 155;
-                image.pixels[i][j].b = 155;
-            } else {
-                image.pixels[i][j].r = 0;
-                image.pixels[i][j].g = 0;
-                image.pixels[i][j].b = 0;
-            }
+/* Perform grayscale mapping filter */
+void EDIT_GrayscaleMap(const Image *image, const Image *edgeImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            float average = (0.3*image->pixels[i][j].r + 0.59*image->pixels[i][j].g + 0.1*image->pixels[i][j].b) / 3;
+            edgeImage->pixels[i][j].r = average;
+            edgeImage->pixels[i][j].g = average;
+            edgeImage->pixels[i][j].b = average;
         }
     }
+}
 
-    printf("Image:\n");
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            printf("(%3d, %3d, %3d) ", image.pixels[i][j].r, image.pixels[i][j].g, image.pixels[i][j].b);
+/* Perform grayscale mapping filter */
+void EDIT_RedMap(const Image *image, const Image *transformImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            transformImage->pixels[i][j].r = image->pixels[i][j].r;
+            transformImage->pixels[i][j].g = 0;
+            transformImage->pixels[i][j].b = 0;
         }
-        printf("\n");
     }
+}
 
-    // Rotate the image
-    EDIT_Rotate(&image, &rotatedImage, angle);
 
-    printf("Rotated Image:\n");
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            printf("(%3d, %3d, %3d) ", rotatedImage.pixels[i][j].r, rotatedImage.pixels[i][j].g, rotatedImage.pixels[i][j].b);
+/* Perform grayscale mapping filter */
+void EDIT_GreenMap(const Image *image, const Image *transformImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            transformImage->pixels[i][j].r = 0;
+            transformImage->pixels[i][j].g = image->pixels[i][j].g;
+            transformImage->pixels[i][j].b = 0;
         }
-        printf("\n");
     }
-    
-    // Apply transformation (crop and move) to the rotated image
-    EDIT_Transformation(&image, &transformedImage, x, y, cropWidth, cropHeight, dx, dy);
+}
 
-    printf("Transformed Image:\n");
-    for (int i = 0; i < cropHeight; i++) {
-        for (int j = 0; j < cropWidth; j++) {
-            printf("(%3d, %3d, %3d) ", transformedImage.pixels[i][j].r, transformedImage.pixels[i][j].g, transformedImage.pixels[i][j].b);
+
+/* Perform grayscale mapping filter */
+void EDIT_BlueMap(const Image *image, const Image *transformImage) {
+     for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            transformImage->pixels[i][j].r = 0;
+            transformImage->pixels[i][j].g = 0;
+            transformImage->pixels[i][j].b = image->pixels[i][j].b;
         }
-        printf("\n");
     }
-    // Scale the image
-    EDIT_Scale(&image, &scaledImage, scale);
-
-    printf("Scaled Image:\n");
-    for (int i = 0; i < scaledImage.height; i++) {
-        for (int j = 0; j < scaledImage.width; j++) {
-            printf("(%3d, %3d, %3d) ", scaledImage.pixels[i][j].r, scaledImage.pixels[i][j].g, scaledImage.pixels[i][j].b);
-        }
-        printf("\n");
-    }
-    // Apply edge detection
-    EDIT_Edgedetection(&image, &edgeImage);
-
-    printf("Edge Detected Image:\n");
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            printf("(%3d, %3d, %3d) ", edgeImage.pixels[i][j].r, edgeImage.pixels[i][j].g, edgeImage.pixels[i][j].b);
-        }
-        printf("\n");
-    }
-
-    // Free allocated memory
-    for (int i = 0; i < rows; i++) {
-        free(image.pixels[i]);
-        free(rotatedImage.pixels[i]);
-        free(scaledImage.pixels[i]);
-        free(edgeImage.pixels[i]);
-    }
-    for (int i = 0; i < cropHeight; i++) {
-        free(transformedImage.pixels[i]);
-    }
-    
-    free(image.pixels);
-    free(rotatedImage.pixels);
-    free(transformedImage.pixels);
-    free(scaledImage.pixels);
-    free(edgeImage.pixels);
-    }*/
+}

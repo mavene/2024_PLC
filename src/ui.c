@@ -1,23 +1,17 @@
+/* GTK UI for Preview Mode */
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-
-
-/* UI here, including preview's redo and undo feature */
-
 /* SHIVANI */
-/* Put in scanf for file paths and sanitize them here*/
-char * retrieve_file() {
-    /*Call GTK here to retrieve file */
-    return 0;
-}
 
-static void
-print_hello (GtkWidget *widget, gpointer data)
+/* Callback - closes preview */
+static void close_preview (GtkWidget *widget, gpointer data)
 {
-  g_print ("Previous\n");
+  g_print ("Closing preview\n");
+  gtk_widget_destroy(data);
 }
 
+/* Layout elements in GTK application - image, button etc. */
 static void activate (GtkApplication *app, gpointer userdata)
 {
   GtkWidget *window;
@@ -39,8 +33,8 @@ static void activate (GtkApplication *app, gpointer userdata)
   gtk_widget_set_halign (image, GTK_ALIGN_CENTER);
   gtk_widget_set_valign (image, GTK_ALIGN_CENTER);
   
-  button = gtk_button_new_with_label ("Hello World");
-  g_signal_connect (button, "clicked", G_CALLBACK (print_hello), NULL);
+  button = gtk_button_new_with_label ("Close Preview");
+  g_signal_connect (button, "clicked", G_CALLBACK (close_preview), window); // NULL
   gtk_box_pack_start (GTK_BOX (box), button, FALSE, FALSE, 0);
   gtk_widget_set_halign (button, GTK_ALIGN_CENTER);
   gtk_widget_set_valign (button, GTK_ALIGN_CENTER);
@@ -49,18 +43,12 @@ static void activate (GtkApplication *app, gpointer userdata)
   gtk_widget_show_all (window);
 }
 
+/* Create GTK App and pass in image file path from user */
 void open_gtk_window(const char *image_path) {
     GtkApplication *app;
-    /*int status;*/
-
     app = gtk_application_new("org.gtk.example", 0);
+
     g_signal_connect(app, "activate", G_CALLBACK(activate), (gpointer)image_path);
-    g_application_run(G_APPLICATION(app), 0, NULL); /*status = */
+    g_application_run(G_APPLICATION(app), 0, NULL);
     g_object_unref(app);
 }
-
-
-// int main(int argc, char **argv) {
-//     open_gtk_window("../image.png");
-//     return 0;
-// }

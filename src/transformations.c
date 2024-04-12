@@ -166,12 +166,6 @@ void EDIT_Scale(const Image *image, Image *scaledImage, int scale, int corner) {
             if (pre_i >= 0 && pre_i < image->height && pre_j >= 0 && pre_j < image->width) {
                  scaledImage->pixels[i][j] = image->pixels[pre_i][pre_j];
             }
-            // } else {
-            //     // Set pixel to black if outside the original image bounds
-            //     scaledImage->pixels[i - startY][j - startX].r = 0;
-            //     scaledImage->pixels[i - startY][j - startX].g = 0;
-            //     scaledImage->pixels[i - startY][j - startX].b = 0;
-            // }
         }
     }
 }

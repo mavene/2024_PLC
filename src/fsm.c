@@ -130,6 +130,9 @@ void transition(FSM* fsm, History* history, char* input) {
       case '8':
          fsm->currentState = DOWNLOAD_MODE;
          break;
+      case '9':
+         fsm->currentState = END;
+         break;
       }
       fsm->prevState = EDIT_MODE;
    }
@@ -169,7 +172,7 @@ void transition(FSM* fsm, History* history, char* input) {
       fsm->prevState = EDIT_GREYMAP;
    }
    else if (fsm->currentState == EDIT_COLOURMAP) {
-      EDIT_colourMap_FSM(fsm, history, input); /* Apply redmapping transformation */
+      EDIT_colourMap_FSM(fsm, history, input); /* Apply colour separation transformation */
       history->initStatus = 1;
 
       fsm->currentState = PREVIEW_MODE;
@@ -304,7 +307,7 @@ int PARSE_PPM_FSM(FSM* f, History* h, char* input) {
 void EDIT_FSM(FSM* f, char* input) {
    /* Call all edit mode functions
       1. Display edit tools to users */
-   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Greymap filter\n6. Colourmap filter\n7. Preview\n8. Download\n");
+   printf("Editing tools:\n1. Translate (Crop)\n2. Scale (Zoom)\n3. Rotate\n4. Edge Detection\n5. Greymap filter\n6. Colourmap filter\n7. Preview\n8. Download\n9. Exit\n");
    get_command(f->currentState, input);
 }
 

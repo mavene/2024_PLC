@@ -121,7 +121,7 @@ int get_file(char *input) {
 int pngtoppm(char* filename) {
     char* command = (char*)malloc(sizeof(char)*256);
     char* first_command = "magick ";
-    char* second_command = " -compress none ";
+    char* second_command = " -compress none -depth 8 "; /* Specify bit depth to 8 (Linux IM may not specify unlike Windows)*/
     int statusCode = 0;
 
     strcpy(command, first_command);
@@ -141,10 +141,12 @@ int pngtoppm(char* filename) {
 int ppmtopng(char* filename) {
     char* command = (char*)malloc(sizeof(char)*256);
     char* first_command = "magick ";
+    char* second_command = " -depth 8 "; /* Specify bit depth to 8 (Linux IM may not specify unlike Windows)*/
     int statusCode = 0;
 
     strcpy(command, first_command);
     strcat(command, filename);
+    strcat(command, second_command); /* Specify bit depth to 8 (Linux IM may not specify unlike Windows)*/
     strcat(command, " ");
 
     strcat(command, "./media/output.png");

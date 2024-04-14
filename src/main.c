@@ -6,7 +6,7 @@
 #include "ui.h"
 #include "history.h"
 
-/* Print goodbye cuz why not */
+/* Print goodbye message */
 void goodbye() {
     printf("Goodbye~\n");
 }

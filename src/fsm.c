@@ -46,6 +46,7 @@ void transition(FSM* fsm, History* history, char* input) {
          fsm->currentState = ERROR;
          fsm->errorCode = UPLOAD_FAIL;
       } else {
+         /* Goes to PREVIEW */
          fsm->currentState = PREVIEW_MODE;
       }
       fsm->prevState = UPLOAD_MODE;
@@ -61,6 +62,7 @@ void transition(FSM* fsm, History* history, char* input) {
          switch (*input)
          {
          case 'Y':
+            /* Goes to EDIT if commit changes */
             if (fsm->prevState == EDIT_MODE ||
                   fsm->prevState == EDIT_TRANSLATION ||
                   fsm->prevState == EDIT_SCALING ||
@@ -69,13 +71,16 @@ void transition(FSM* fsm, History* history, char* input) {
                   fsm->prevState == EDIT_GREYMAP ||
                   fsm->prevState == EDIT_COLOURMAP) {
                   fsm->currentState = EDIT_MODE;
+            /* Goes to PARSER if accept upload */
             } else if (fsm->prevState == UPLOAD_MODE) {
                fsm->currentState = PARSER_PPM;
             }
             break;
          case 'N':
+            /* Goes to UPLOAD if reject upload */
             if (fsm->prevState == UPLOAD_MODE) {
                fsm->currentState = UPLOAD_MODE;
+            /* Goes to EDIT if undoing changes */
             } else if (fsm->prevState == EDIT_MODE || 
                         fsm->prevState == EDIT_TRANSLATION || 
                         fsm->prevState == EDIT_ROTATION || 
@@ -94,9 +99,11 @@ void transition(FSM* fsm, History* history, char* input) {
       int statusCode = PARSE_PPM_FSM(fsm, history, input); /* Parse PNG to PPM to to matrix/image struct */
 
       if (statusCode) {
+         /* Error State Handler*/
          fsm->currentState = ERROR;
          fsm->errorCode = PARSE_FAIL;
       } else {
+         /* Goes to EDIT */
          fsm->currentState = EDIT_MODE;
       }
       fsm->prevState = PARSER_PPM;
@@ -104,6 +111,7 @@ void transition(FSM* fsm, History* history, char* input) {
    else if (fsm->currentState == EDIT_MODE) {
       EDIT_FSM(fsm, input); /* Display edit tools to user */
 
+      /* Goes to specific edit modes */
       switch (*input) 
       {
       case '1':
@@ -140,6 +148,7 @@ void transition(FSM* fsm, History* history, char* input) {
       EDIT_translation_FSM(fsm, history);  /* Apply crop transformation */
       history->initStatus = 1;
 
+      /* Goes to PREVIEW to show changes */
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_TRANSLATION;
    }
@@ -147,6 +156,7 @@ void transition(FSM* fsm, History* history, char* input) {
       EDIT_scaling_FSM(fsm, history); /* Apply scale transformation */
       history->initStatus = 1;
 
+      /* Goes to PREVIEW to show changes */
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_SCALING;
    }
@@ -154,6 +164,7 @@ void transition(FSM* fsm, History* history, char* input) {
       EDIT_rotation_FSM(fsm, history); /* Apply rotation transformation */
       history->initStatus = 1;
 
+      /* Goes to PREVIEW to show changes */
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_ROTATION;
    }
@@ -161,6 +172,7 @@ void transition(FSM* fsm, History* history, char* input) {
       EDIT_edgeDetect_FSM(history); /* Apply edge detection transformation */
       history->initStatus = 1;
 
+      /* Goes to PREVIEW to show changes */
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_EDGE_DETECT;
    }
@@ -168,6 +180,7 @@ void transition(FSM* fsm, History* history, char* input) {
       EDIT_greyMap_FSM(history); /* Apply greymapping transformation */
       history->initStatus = 1;
 
+      /* Goes to PREVIEW to show changes */
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_GREYMAP;
    }
@@ -175,6 +188,7 @@ void transition(FSM* fsm, History* history, char* input) {
       EDIT_colourMap_FSM(fsm, history, input); /* Apply colour separation transformation */
       history->initStatus = 1;
 
+      /* Goes to PREVIEW to show changes */
       fsm->currentState = PREVIEW_MODE;
       fsm->prevState = EDIT_COLOURMAP;
    }
@@ -182,14 +196,17 @@ void transition(FSM* fsm, History* history, char* input) {
       statusCode = DOWNLOAD_FSM(history); /* Clean up artifacts and download PNG */
 
       if (statusCode) {
+         /* Error State Handler */
          fsm->currentState = ERROR;
          fsm->errorCode = DOWNLOAD_FAIL;
       } else {
+         /* Goes to START after downloading transformed image */
          fsm->currentState = START;
       }
       fsm->prevState = DOWNLOAD_MODE;
    }
    else if (fsm->currentState == ERROR) {
+      /* Goes to END after printing error message */
       switch (fsm->errorCode)
       {
       case UPLOAD_FAIL:

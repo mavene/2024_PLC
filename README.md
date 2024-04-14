@@ -16,37 +16,40 @@ This application depends on 2 external programs - 1) GTK for the preview image d
 
 #### 1. GTK
 
-##### Windows (MSYS64) - Recommended
+#### Windows (MSYS64) - Recommended
 Please download MSYS2 [here](https://www.msys2.org/wiki/MSYS2-installation/) if not already installed.
 
 Add bin path of path/to/msys64/mingw/bin to system env variables path.
 
 Open MSYS2 terminal and run the following commands:<br>
+
     pacman -S mingw-w64-x86_64-gtk3
     pacman -S mingw-w64-x86_64-toolchain base-devel
 
-##### Windows (Cygwin) 
+#### Windows (Cygwin) 
 Please download CYGWIN [here](https://www.cygwin.com/install.html) if not already installed.
 
 Add bin path of path/to/cygwin64/bin to system env variables path.
 
 Run the setup-x86_64.exe application and install the following packages:<br>
+
     libgtk3-devel
     libgtk3_0
 
-##### Linux
+#### Linux
 Assuming the distribution is Debian/Ubuntu, run:
+
     apt-get install libgtk-3-0
     apt-get install libgtk-3-dev
     
 #### 2. Image Magick
 
-##### Windows
+#### Windows
 Install Image Magick [here](https://imagemagick.org/script/download.php) <br>
-Please install <b>Win64 dynamic at 8 bits-per-pixel component<b>
+Using the  **Win64 dynamic at 8 bits-per-pixel component** version
 
-##### Linux
-Use the same link as above. 
+#### Linux
+Use the same link as above. <br>
 Please install the appropriate rpm version for your Linux distribution and follow the official setup instructions on the website. 
 
 ### Building from Source
@@ -60,6 +63,12 @@ There should now be an executable in the /bin folder alongside its required dlls
     ./bin/image_processor.exe
 
 **\*Note:** A CYGWIN-specific Makefile is also provided but we recommend using the MSYS64 development environment. 
+
+If you encounter any issues (gcc or pkgconfig not found), you may change each Makefile's CC, GTKINCLUDE, GTKLIBS to specify the correct path to those tools:
+
+    CC := path/to/bin/gcc.exe
+    GTKINCLUDE := $$(PKG_CONFIG_PATH=/path/to/lib/pkgconfig/ pkg-config --cflags gtk+-3.0)
+    GTKLIBS := $$(PKG_CONFIG_PATH=/path/to/lib/pkgconfig/ pkg-config --libs gtk+-3.0)
 
 ### Usage
 
